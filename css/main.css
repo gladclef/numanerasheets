@@ -13,7 +13,7 @@ table.main_page_container {
 
 table.main_page_content {
 	margin: 0 auto;
-	width: 800px;
+	width: 1500px;
 	padding: 20px 50px;
 	text-align: center;
 	vertical-align: middle;
@@ -23,12 +23,12 @@ table.main_page_content {
 }
 
 .tab_contents {
-	height: 800px;
+	height: 1500px;
 	overflow-y: scroll;
 }
 
 .spacer_for_div_contents {
-	width:805px;
+	width:1505px;
 	height:0px;
 }
 
@@ -192,4 +192,33 @@ table.custom_classes tbody tr {
 
 table.custom_classes tbody tr:nth-child(odd) {
 	background-color:#ddd;
+}
+
+.inset_shadow {
+   -moz-box-shadow:    inset 0 0 10px #000000;
+   -webkit-box-shadow: inset 0 0 10px #000000;
+   box-shadow:         inset 0 0 10px #000000;
+}
+
+div.row {
+	display:flex;
+    flex-direction:row;
+	justify-content: space-around;
+}
+
+div.column {
+    display:flex;
+    flex-direction:column;
+    padding: 10px;
+}
+
+.hidden {
+	display: none;
+}
+
+form input {
+	margin:0 0 10 0;
+}
+form select {
+	margin:0 0 10 0;
 }

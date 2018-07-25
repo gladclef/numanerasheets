@@ -3,68 +3,50 @@
 global $o_access_object;
 require_once(dirname(__FILE__).'/../../resources/db_query.php');
 require_once(dirname(__FILE__).'/../../resources/globals.php');
-require_once(dirname(__FILE__).'/user_funcs.php');
+require_once(dirname(__FILE__)."/../../resources/check_logged_in.php");
+require_once(dirname(__FILE__).'/campaign_funcs.php');
 require_once(dirname(__FILE__)."/../login/access_object.php");
 require_once(dirname(__FILE__)."/../../objects/command.php");
 
 class user_ajax {
-	public static function check_username() {
-		$s_username = get_post_var('username');
-		$s_username_status = user_funcs::username_status($s_username);
-		switch ($s_username_status) {
+	public static function check_campaign_name() {
+		$s_name = get_post_var('campaign_name');
+		$s_name_status = campaign_funcs::campaign_name_status($s_name);
+		$a_parts = array("element_find_by"=>"#campaign_name_errors", "class"=>"hidden");
+		switch ($s_name_status) {
 		case 'blank':
 			return json_encode(array(
-				new command("print failure", "The username is blank")));
+				new command("print failure", "The campaign name is blank"),
+				new command("remove class", $a_parts)));
 		case 'taken':
 			return json_encode(array(
-				new command("print failure", "That username is already taken.")));
+				new command("print failure", "That campaign name is already taken."),
+				new command("remove class", $a_parts)));
 		case 'available':
 			return json_encode(array(
-				new command("print success", "That username is available.")));
+				new command("print success", "That campaign name is available."),
+				new command("remove class", $a_parts)));
 		}
 	}
 
-	public static function create_user() {
+	public static function create_campaign() {
 		global $maindb;
 		global $fqdn;
 
-		$s_username = trim(get_post_var('username'));
-		$s_password = trim(get_post_var('password'));
-		$s_email = trim(get_post_var('email'));
+		$s_name = trim(get_post_var('campaign_name'));
+		$b_public = intval(trim(get_post_var('public')));
+		$b_passProtected = intval(trim(get_post_var('passProtected')));
+		$s_pass = trim(get_post_var('pass'));
 		
-		// check the input
-		if (strlen($s_username) == 0)
+		// try creating the campaign
+		$s_feedback = "";
+		if (!campaign_funcs::create_campaign($s_name, $b_public, $b_passProtected, $s_pass, $s_feedback))
 			return json_encode(array(
-				new command("print failure", "The username is blank.")));
-		if (strlen($s_password) == 0)
-			return json_encode(array(
-				new command("print failure", "The password is blank.")));
-		if (strlen($s_email) == 0)
-			return json_encode(array(
-				new command("print failure", "The email is blank.")));
-		
-		// check that the email and username are unique
-		$a_users = db_query("SELECT * FROM `[database]`.`users` WHERE `username`='[username]' OR `email`='[email]'", array("database"=>$maindb, "username"=>$s_username, "email"=>$s_email));
-		if (count($a_users) > 0)
-			return json_encode(array(
-				new command("print failure", "That username or email is already taken.")));
-		
-		// check that the username is valid
-		if (!preg_match("/^[a-zA-Z0-9 ]+$/", $s_username))
-			return json_encode(array(
-				new command("print failure", "The username is invalid (may only contain letters, numbers, and spaces)")));
+				new command("print failure", $s_feedback)));
 
-		// try creating the user
-		if (!user_funcs::create_user($s_username, $s_password, $s_email))
-			return json_encode(array(
-				new command("print failure", "Error creating user")));
-
-		mail($s_email, 'beanweb account', "You just created an account on {$fqdn} with the username \"".$s_username.".\"
-Log in to your new account from {$fqdn}.
-
-If you ever forget your password you can reset it from the main page by clicking on the \"forgot password\" link.", "From: noreply@{$fqdn}");
 		return json_encode(array(
-			new command("print success", "Success! You can now use the username {$s_username} to log in from the main page!")));
+			new command("print success", "Success! Campaign created!"),
+			new command("reload page", "1000")));
 	}
 
 	/**
@@ -167,14 +149,11 @@ If you ever forget your password you can reset it from the main page by clicking
 	}
 }
 
-if (isset($_POST['draw_create_user_page']))
-		echo json_encode(array(
-			new command("load page", "/pages/users/create.php[*post*]draw_create_user_page[*value*]1")));
-else if (isset($_POST['draw_forgot_password_page']))
-		echo json_encode(array(
-			new command("load page", "/pages/users/forgot_password.php[*post*]draw_forgot_password_page[*value*]1")));
-else if (isset($_POST['username']) && !isset($_POST['command']))
-		$_POST['command'] = 'check_username';
+if (!$global_user) {
+	logout_session();
+}
+if (isset($_POST['username']) && !isset($_POST['command']))
+		$_POST['command'] = 'check_campaign_name';
 if (isset($_POST['command'])) {
 		$o_ajax = new user_ajax();
 		$s_command = $_POST['command'];

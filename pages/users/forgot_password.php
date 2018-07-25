@@ -60,16 +60,16 @@ function draw_forgot_password_page() {
 
 		<div id='username' class='credential_type' style='display:inline-block;'>
 			<label name='username'>Username</label>
-			<input type='textbox' size='20' name='username'><br />
+			<input type='textbox' size='20' name='username' onkeypress="if (event.keyCode==13){ $('#reset_submit').click(); }"><br />
 		</div>
 		<div id='email' class='credential_type' style='display:none;'>
 			<label name='email'>Email</label>
-			<input type='textbox' size='20' name='email'><br />
+			<input type='textbox' size='20' name='email' onkeypress="if (event.keyCode==13){ $('#reset_submit').click(); }"><br />
 		</div>
 		<br /><br />
 
 		<div style='float:right;'>
-			<input type='button' value='Send Email' onclick='send_ajax_call_from_form("/pages/users/ajax.php","reset_password_form");' />
+			<input id="reset_submit" type='button' value='Send Email' onclick='send_ajax_call_from_form("/pages/users/ajax.php","reset_password_form");' />
 		</div><br />
 	</form>
 

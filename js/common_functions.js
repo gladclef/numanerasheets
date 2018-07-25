@@ -81,6 +81,17 @@ function get_parent_by_tag(s_tagname, jobject) {
 	return jparent;
 }
 
+function get_child_depth(jchild, jparent) {
+	var parent = jchild;
+	var depth = 0;
+	while (!parent.is(jparent))
+	{
+		parent = parent.parent();
+		depth++;
+	}
+	return depth;
+}
+
 jQuery.fn.outerHTML = function(s) {
     return s
         ? this.before(s).remove()

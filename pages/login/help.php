@@ -8,7 +8,7 @@ require_once(dirname(__FILE__)."/../../resources/common_functions.php");
 //	$o_project_installer->check_install_database() &&
 //	$o_project_installer->check_create_users()) {
 	if (check_logged_in()) {
-		header('Location: /pages/classes/main.php');
+		header('Location: /pages/campaigns/welcome.php');
 	} else {
 		echo manage_output(draw_login_page(get_post_var('session_expired')));
 	}

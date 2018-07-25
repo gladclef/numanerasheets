@@ -14,7 +14,7 @@ if ($o_user->exists_in_db()) {
 		$global_user = $o_user;
 		login_session($o_user);
 		echo json_encode(array(
-			new command("load page", "/pages/classes/main.php")));
+			new command("load page", "/pages/campaigns/welcome.php")));
 } else {
 		echo json_encode(array(
 			new command("print failure", "Bad username or password"),

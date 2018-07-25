@@ -10,12 +10,12 @@ function draw_create_user_form() {
 
 		<div id="choose_username_form">
 			<label>Choose a username:</label><br />
-			<input type="textarea" size="30" name="username" placeholder="Eg: The Dude" onblur="send_ajax_call_from_form('ajax.php','choose_username_form');" /><br />
+			<input type="textarea" size="30" name="username" placeholder="Eg: The Dude" onblur="send_ajax_call_from_form('ajax.php','choose_username_form');" onkeypress="if (event.keyCode==13){ $('#create_submit').click(); }" /><br />
 			<label class="errors">&nbsp;</label>
 		</div>
 
 		<label>Choose a password:</label><br />
-		<input type="password" name="password" size="30" /><br /><br />
+		<input type="password" name="password" size="30" onkeypress="if (event.keyCode==13){ $('#create_submit').click(); }" /><br /><br />
 		<label>Please enter an email (used for resetting your password):</label><br />
 		<input type="textarea" name="email" size="30" placeholder="Eg: thedudeabides@anywhere.net" onkeypress="if (event.keyCode==13){ $('#create_submit').click(); }" /><br />
 		<label class="errors"></label><br />

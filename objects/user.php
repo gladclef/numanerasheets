@@ -1,7 +1,7 @@
 <?php
 require_once(dirname(__FILE__)."/../resources/db_query.php");
 require_once(dirname(__FILE__)."/../resources/globals.php");
-//require_once(dirname(__FILE__)."/accesses.php");
+require_once(dirname(__FILE__)."/accesses.php");
 
 class user {
 	private $name = '';
@@ -14,7 +14,6 @@ class user {
 	private $a_whitelists = array();
 	private $a_blacklists = array();
 	private $email = '';
-	private $s_userDatabase = 'users';
 
 	function __construct($username, $password, $crypt_password) {
 		$this->name = $username;
@@ -91,7 +90,7 @@ class user {
 		global $maindb;
 		if (!$this->exists)
 				return '';
-		$a_users = db_query("SELECT `pass` FROM `[maindb]`.`[s_userDatabase]` WHERE `username`='[username]'", array("maindb"=>$maindb, "username"=>$this->name));
+		$a_users = db_query("SELECT `pass` FROM `[maindb]`.`users` WHERE `username`='[username]'", array("maindb"=>$maindb, "username"=>$this->name));
 		if ($a_users !== FALSE) {
 				if (count($a_users) > 0) {
 						$a_user = $a_users[0];
@@ -142,7 +141,7 @@ class user {
 		if ($this->name == "guest") {
 				return False;
 		}
-		$a_query = db_query("UPDATE `{$maindb}`.`{$s_userDatabase}` SET `pass`=AES_ENCRYPT('[username]','[password]') WHERE `username`='[username]'", array("username"=>$this->name, "password"=>$s_password));
+		$a_query = db_query("UPDATE `{$maindb}`.`users` SET `pass`=AES_ENCRYPT('[username]','[password]') WHERE `username`='[username]'", array("username"=>$this->name, "password"=>$s_password));
 		if ($a_query !== FALSE && $mysqli->affected_rows > 0) {
 				return TRUE;
 		}
@@ -151,12 +150,12 @@ class user {
 	public function disable_account() {
 		global $maindb;
 		global $mysqli;
-		$a_query = db_query("SELECT `disabled` FROM `[maindb]`.`{$s_userDatabase}` WHERE `username`='[name]'",
+		$a_query = db_query("SELECT `disabled` FROM `[maindb]`.`users` WHERE `username`='[name]'",
 			array("maindb"=>$maindb, "name"=>$this->name));
 		if ($a_query === FALSE || count($a_query) == 0 || (int)$a_query[0]["disabled"] != 0) {
 			return "Account already disabled.";
 		}
-		$a_query = db_query("UPDATE `[maindb]`.`{$s_userDatabase}` SET `disabled`='1' WHERE `username`='[name]'",
+		$a_query = db_query("UPDATE `[maindb]`.`users` SET `disabled`='1' WHERE `username`='[name]'",
 			array("maindb"=>$maindb, "name"=>$this->name));
 		if ($a_query !== FALSE && $mysqli->affected_rows > 0) {
 			return "success";
@@ -170,7 +169,7 @@ class user {
 		$id = $this->get_id();
 		$a_username = array("username"=>$username);
 		$a_id = array("id"=>$id);
-		$a_query = db_query("SELECT `id` FROM `[maindb]`.`{$s_userDatabase}` WHERE `id`='[id]'", 
+		$a_query = db_query("SELECT `id` FROM `[maindb]`.`users` WHERE `id`='[id]'", 
 			array_merge(array("maindb"=>$maindb), $a_id));
 		if ($a_query === FALSE || count($a_query) == 0) {
 			return "Account already deleted/doesn't exist.";
@@ -180,7 +179,7 @@ class user {
 		db_query("DELETE FROM `{$maindb}`.`semester_blacklist` WHERE `user_id`='[id]'", $a_id);
 		db_query("DELETE FROM `{$maindb}`.`semester_classes` WHERE `user_id`='[id]'", $a_id);
 		db_query("DELETE FROM `{$maindb}`.`semester_whitelist` WHERE `user_id`='[id]'", $a_id);
-		$query = db_query("DELETE FROM `{$maindb}`.`{$s_userDatabase}` WHERE `id`='[id]'", $a_id);
+		$query = db_query("DELETE FROM `{$maindb}`.`users` WHERE `id`='[id]'", $a_id);
 		$affected_rows = $mysqli->affected_rows;
 		db_query("DELETE FROM `{$maindb}`.`user_settings` WHERE `user_id`='[id]'", $a_id);
 		if ($query !== FALSE && $affected_rows) {
@@ -318,9 +317,9 @@ class user {
 		$username = $this->name;
 
 		if ($password !== NULL)
-				$a_users = db_query("SELECT * FROM `[maindb]`.`{$s_userDatabase}` WHERE `username`='[username]' AND `pass`=AES_ENCRYPT('[username]','[password]') AND `disabled`='0'", array("maindb"=>$maindb, "username"=>$username, "password"=>$password));
+				$a_users = db_query("SELECT * FROM `[maindb]`.`users` WHERE `username`='[username]' AND `pass`=AES_ENCRYPT('[username]','[password]') AND `disabled`='0'", array("maindb"=>$maindb, "username"=>$username, "password"=>$password));
 		else
-				$a_users = db_query("SELECT * FROM `[maindb]`.`{$s_userDatabase}` WHERE `username`='[username]' AND `pass`='[crypt_password]' AND `disabled`='0'", array("maindb"=>$maindb, "username"=>$username, "crypt_password"=>$crypt_password));
+				$a_users = db_query("SELECT * FROM `[maindb]`.`users` WHERE `username`='[username]' AND `pass`='[crypt_password]' AND `disabled`='0'", array("maindb"=>$maindb, "username"=>$username, "crypt_password"=>$crypt_password));
 		if ($a_users === FALSE)
 				return NULL;
 		if (count($a_users) == 0)
@@ -342,10 +341,11 @@ class user {
 
 		// load server settings
 		$a_settings_vars = array("database"=>$maindb, "user_id"=>$userid, "type"=>"server");
-		$s_settings_string = "SELECT * FROM `[database]`.`user_settings` WHERE `user_id`='[user_id]'";
-		$a_settings = db_query($s_settings_string, $a_settings_vars);
-		if (is_array($a_settings) && count($a_settings) > 0)
-				$this->a_server_settings = $a_settings[0];
+		// $s_settings_string = "SELECT * FROM `[database]`.`user_settings` WHERE `user_id`='[user_id]'";
+		// $a_settings = db_query($s_settings_string, $a_settings_vars);
+		// if (is_array($a_settings) && count($a_settings) > 0)
+		// 		$this->a_server_settings = $a_settings[0];
+		
 		// load other settings
 	}
 
@@ -359,7 +359,7 @@ class user {
 	 */
 	public static function get_id_by_username($username) {
 		global $maindb;
-		$a_queryvars = array("database"=>$maindb, "table"=>"{$s_userDatabase}", "username"=>$username, "disabled"=>"0");
+		$a_queryvars = array("database"=>$maindb, "table"=>"users", "username"=>$username, "disabled"=>"0");
 		$s_querystring = "SELECT `id` FROM `[database]`.`[table]` WHERE `username`='[username]' AND `disabled`='[disabled]'";
 		$a_rows = db_query($s_querystring, $a_queryvars);
 		if (count($a_rows) == 0) {
@@ -387,7 +387,7 @@ class user {
 		
 		// load the user
 		$s_disabled = ($b_ignore_disabled) ? "AND `disabled`='0'" : "";
-		$a_users = db_query("SELECT `username`,`pass` FROM `{$maindb}`.`{$s_userDatabase}` WHERE `id`='[id]' {$s_disabled}", array("id"=>$i_user_id));
+		$a_users = db_query("SELECT `username`,`pass` FROM `{$maindb}`.`users` WHERE `id`='[id]' {$s_disabled}", array("id"=>$i_user_id));
 		if (is_array($a_users) && count($a_users) > 0) {
 				$o_user = new user($a_users[0]['username'], NULL, $a_users[0]['pass']);
 				// note: creating a new user registers the user with global_user

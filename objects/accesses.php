@@ -34,6 +34,10 @@ class accesses {
 	private function build_accesses() {
 		global $maindb;
 		
+		
+		return array();
+
+
 		$a_accesses = db_query("SELECT * FROM `[maindb]`.`accesses`",
 							   array("maindb"=>$maindb));
 		if ($a_accesses == FALSE || count($a_accesses) == 0)

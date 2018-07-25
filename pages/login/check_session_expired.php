@@ -7,6 +7,7 @@ $s_command = get_post_var("command");
 
 function check_session_expired() {
 	my_session_start();
+	return "[]";
 	if (get_session_expired())
 		return json_encode(array(
 			new command("alert", "Your session has expired. You are now being redirected to the login screen.

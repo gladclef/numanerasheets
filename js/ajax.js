@@ -101,20 +101,35 @@ function send_ajax_call_from_form(php_file_name, form_id) {
 	var jform = $("#"+form_id);
 	var inputs = get_values_in_form(jform);
 	var jerrors_label = $(jform.find("label.errors"));
+	jerrors_label = (jerrors_label.length > 1) ? $(jerrors_label[jerrors_label.length-1]) : jerrors_label;
+
+	// limit the inputs to the top level one for each one with the same name
+	var found = {};
+	for (var i = 0; i < inputs.length; i++) {
+		var jinput = $(inputs[i]);
+		var name = jinput.prop("name");
+		if (found[name] === undefined) {
+			found[name] = jinput;
+		} else if (get_child_depth(jinput, jform) < get_child_depth(found[name], jform)) {
+			found[name] = jinput;
+		}
+	}
 	
 	// for each input, get the name and value of the input to be posted to the server
 	var posts = {};
 	var full_posts = [];
 	for(var i = 0; i < inputs.length; i++) {
-		var jinput = $(inputs[i]);
-		var name = jinput.prop("name");
+		var name = $(inputs[i]).prop("name");
+		var jinput = found[name];
 		var value = jinput.val();
-		if (jinput.prop('type') == 'checkbox') {
+		if (jinput.prop('type') == 'checkbox' || jinput.prop('type') == 'radio') {
 			value = jinput[0].checked ? 1 : 0;
 		}
 		full_posts.push([name, value]);
 		posts[name] = value;
 	}
+	console.log(jform);
+	console.log(full_posts);
 
 	// init the errors label and send the data
 	set_html_and_fade_in(jerrors_label, "", "<span style='color:gray;'>Please wait...</span>");
@@ -129,7 +144,7 @@ function send_ajax_call_from_form(php_file_name, form_id) {
 		if (command == "print failure") {
 			set_html_and_fade_in(jerrors_label, "", "<span style='color:red;'>"+note+"</span>");
 		} else if (command == "print success") {
-			set_html_and_fade_in(jerrors_label, "", "<span style='color:black;font-weight:normal;'>"+note+"</span>");
+			set_html_and_fade_in(jerrors_label, "", "<span style='color:gray;font-weight:normal;'>"+note+"</span>");
 		} else if (command == "load page with post") {
 			var posts_string = "";
 			for (var i = 0; i < full_posts.length; i++)
@@ -201,7 +216,10 @@ function interpret_common_ajax_commands(commands_array) {
 		} else if (command == "alert") {
 			alert(note);
 		} else if (command == "reload page") {
-			location.reload(true);
+			if (note !== undefined && note.length > 0 && parseInt(note) !== NaN)
+				setTimeout(function() { location.reload(true); }, parseInt(note));
+			else
+				location.reload(true);
 		}
 	}
 }
