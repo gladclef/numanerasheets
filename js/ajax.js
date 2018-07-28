@@ -157,10 +157,8 @@ function send_ajax_call_from_form(php_file_name, form_id) {
 			jform.find("input[name="+note+"]").val("");
 		} else if (command == "set value") {
 			var parts = note;
-			console.log('a');
-			console.log(parts);
+			$(parts.element_find_by).html('');
 			$(parts.element_find_by).html(parts.html);
-			console.log('b');
 		} else if (command == "remove class") {
 			var parts = note;
 			$(parts.element_find_by).removeClass(parts['class']);

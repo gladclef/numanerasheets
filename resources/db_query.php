@@ -51,6 +51,34 @@ function db_query($s_query, $a_values=NULL, $b_print_query = FALSE) {
 	return $a_retval;
 }
 
+function db_try_concat_str($s_database, $s_table, $s_column, $s_concatVal, $s_where_clause, $a_vals, $b_print_query = FALSE)
+{
+	// get the current value
+	$a_current_vals = db_query("SELECT `id`,`[column]` FROM `[database]`.`[table]` {$s_where_clause}",
+	                           array_merge(array('database'=>$s_database, 'table'=>$s_table, 'column'=>$s_column), $a_vals), $b_print_query);
+	if (!is_array($a_current_vals) || count($a_current_vals) != 1)
+		return FALSE;
+	$id = $a_current_vals[0]['id'];
+	$val = $a_current_vals[0][$s_column];
+
+	// try to update the database
+	if (!db_query("UPDATE `[database]`.`[table]` SET `[column]`=CONCAT(`[column]`,'[{$s_concatVal}]') {$s_where_clause}",
+	              array_merge(array('database'=>$s_database, 'table'=>$s_table, 'column'=>$s_column), $a_vals), $b_print_query))
+		return FALSE;
+
+	// check that the entire value made it in
+	$a_new_vals = db_query("SELECT `[column]` FROM `[database]`.`[table]` {$s_where_clause}",
+	                       array_merge(array('database'=>$s_database, 'table'=>$s_table, 'column'=>$s_column), $a_vals), $b_print_query);
+	if (!is_array($a_current_vals) || count($a_current_vals) != 1)
+		return FALSE;
+	if (endsWith($a_new_vals[0][$s_column], $a_vals[$s_concatVal]))
+		return TRUE;
+
+	// failure, restore the old value
+	db_query("UPDATE `[database]`.`[table]` SET `[column]`='[oldColumnVal]') {$s_where_clause}",
+	         array_merge(array('database'=>$s_database, 'table'=>$s_table, 'column'=>$s_column, 'oldColumnVal'=>$val), $a_vals), $b_print_query);
+}
+
 function open_db() {
 	global $global_opened_db;
 	global $mysqli;

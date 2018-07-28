@@ -14,7 +14,7 @@ function get_logged_in() {
 			$_POST['session_expired'] = 'Your session has expired';
 			return NULL;
 	}
-	$_SESSION['last_activity'] = time();
+	updateSessionTime();
 	$o_user = new user($_SESSION['username'], NULL, urldecode($_SESSION['crypt_password']));
 	if ($o_user->exists_in_db()) {
 			$global_user = $o_user;
@@ -23,17 +23,25 @@ function get_logged_in() {
 	return NULL;
 }
 
-function get_session_expired() {
+function updateSessionTime() {
+	$_SESSION['last_activity'] = time();
+}
+
+function get_session_expired($b_isRecentActivity = FALSE) {
 	$time_before_timeout = 60 * 12; // minutes
 	if (isset($_SESSION['time_before_page_expires']))
 			if ((int)$_SESSION['time_before_page_expires'] != 0)
 					$time_before_timeout = (int)$_SESSION['time_before_page_expires'];
-	if ($time_before_timeout < 0)
+	if ($time_before_timeout < 0) {
+			if ($b_isRecentActivity) updateSessionTime();
 			return FALSE;
-	if ((time()-$_SESSION['last_activity'])/60 > $time_before_timeout)
+	}
+	if ((time()-$_SESSION['last_activity'])/60 > $time_before_timeout) {
 			return TRUE;
-	else
+	} else {
+			if ($b_isRecentActivity) updateSessionTime();
 			return FALSE;
+	}
 }
 
 // returns a string for the login page

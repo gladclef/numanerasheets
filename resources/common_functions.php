@@ -76,6 +76,7 @@ function dont_check_session_expired() {
 function draw_page_head($outside_content = '') {
 	global $global_path_to_jquery;
 	$a_page = array();
+	$a_page[] = "<meta content=\"text/html;charset=utf-8\" http-equiv=\"Content-Type\">";
 	$a_page[] = "<html>";
 	$a_page[] = "<head>";
 	$a_page[] = "<link href='/css/main.css' rel='stylesheet' type='text/css'>";
@@ -187,6 +188,14 @@ function get_real_year($s_semester, $s_year) {
 function get_real_semester($s_semester, $s_year) {
 	$a_semester = school_time_to_real_time($s_semester, $s_year);
 	return $a_semester["semester"];
+}
+
+function endsWith($haystack, $needle)
+{
+    $length = strlen($needle);
+
+    return $length === 0 || 
+    (substr($haystack, -$length) === $needle);
 }
 
 ?>

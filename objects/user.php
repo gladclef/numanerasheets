@@ -334,7 +334,8 @@ class user {
 		global $maindb;
 		$userid = $this->id;
 
-		$this->a_server_settings = array('session_timeout'=>'15');
+		//$this->a_server_settings = array('session_timeout'=>'15');
+		$this->a_server_settings = array('session_timeout'=>"".(60*12));
 		if ($this->name == "guest") {
 			return;
 		}
