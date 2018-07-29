@@ -37,19 +37,25 @@
 	background-position: 4px 6px;
 	background-repeat: no-repeat;
 }
+.descriptor_group .checkCircle.small {
+	width: 40px;
+	height: 40px;
+	background-size: 32px 34px;
+	background-position: 3px 4px;
+}
+.descriptor_group .checkCircle.sad[value="1"] {
+	background-image: url("../../images/sadface.png");
+	background-size: 60px;
+	background-position: 0px;
+}
+.descriptor_group .checkCircle.sad.small {
+	background-size: 40px;
+}
 
-.descriptor_group .auto_center {
-	display: table;
-	width: auto;
-	margin: 0 auto;
+.descriptor_group .col7 {
+	display: inline-block;
+	width: 130px;
 }
-.descriptor_group .auto_size {
-	width: auto;
-}
-.descriptor_group .center {
-	text-align: center;
-}
-
 .descriptor_group .col6 {
 	display: inline-block;
 	width: 156px;
@@ -69,4 +75,20 @@
 .descriptor_group .col2 {
 	display: inline-block;
 	width: 470px;
+}
+
+.descriptor_group .auto_center {
+	display: table;
+	margin: 0 auto;
+}
+.descriptor_group .auto_size {
+	width: auto;
+}
+.descriptor_group .center {
+	text-align: center;
+}
+.descriptor_group .checkCircleContainer {
+	display: inline-block;
+	font-size: 16px;
+	vertical-align: top;
 }

@@ -27,30 +27,74 @@ class character_funcs {
 			</div>
 
 			<div style="margin:22px auto;">
-			<span class="col5" style="font-size: 16px; display:inline-block">
+			<span class="col5 checkCircleContainer">
 				<span class="input checkCircle calculate_center" name="benefitIncreaseCapabilities" value="<?php echo "".$a_character['benefitIncreaseCapabilities']; ?>"></span><br />
 				<span class="calculate_center" style="font-weight: bold">Increase Capabilities</span><br />
 				<span class="calculate_center">+4 to stat pools</span>
 			</span>
-			<span class="col5" style="font-size: 16px; display:inline-block">
+			<span class="col5 checkCircleContainer">
 				<span class="input checkCircle calculate_center" name="benefitMoveTowardPerfection" value="<?php echo "".$a_character['benefitIncreaseCapabilities']; ?>"></span><br />
 				<span class="calculate_center" style="font-weight: bold">Move Toward Perfection</span><br />
 				<span class="calculate_center">+1 edge</span>
 			</span>
-			<span class="col5" style="font-size: 16px; display:inline-block">
+			<span class="col5 checkCircleContainer">
 				<span class="input checkCircle calculate_center" name="benefitExtraEffort" value="<?php echo "".$a_character['benefitIncreaseCapabilities']; ?>"></span><br />
 				<span class="calculate_center" style="font-weight: bold">Extra Effort</span><br />
 				<span class="calculate_center">+1 effort</span>
 			</span>
-			<span class="col5" style="font-size: 16px; display:inline-block">
+			<span class="col5 checkCircleContainer">
 				<span class="input checkCircle calculate_center" name="benefitSkillTraining" value="<?php echo "".$a_character['benefitIncreaseCapabilities']; ?>"></span><br />
 				<span class="calculate_center" style="font-weight: bold">Skill Training</span><br />
 				<span class="calculate_center">Train & Specialize</span>
 			</span>
-			<span class="col5" style="font-size: 16px; display:inline-block">
+			<span class="col5 checkCircleContainer">
 				<span class="input checkCircle calculate_center" name="benefitOther" value="<?php echo "".$a_character['benefitIncreaseCapabilities']; ?>"></span><br />
 				<span class="calculate_center" style="font-weight: bold">Other</span><br />
 				<span class="calculate_center">Various Effects</span>
+			</span>
+			</div>
+
+			<div style="margin:22px auto; width:100%">
+			<span class="col7"></span>
+			<span class="fill" style="font-size: 16px; text-align: center; display:inline-block">Recovery Rolls</span>
+			<span class="col4" style="font-size: 16px; text-align: center;">Damage</span>
+			</div>
+			<div>
+			<span class="col7 checkCircleContainer" style="vertical-align: top; padding-top: 15px;">
+				<span class="calculate_center">Recovery Bonus:</span><br />
+				<input class="col7 auto_center" type="text" name="recoveryBonus" value="<?php echo $a_character['recoveryBonus']; ?>" placeholder="recoveryBonus" style="text-align: center;">
+			</span>
+			<span class="col7 checkCircleContainer">
+				<span class="input checkCircle calculate_center" name="recoveryAction" value="<?php echo "".$a_character['recoveryAction']; ?>"></span><br />
+				<span class="calculate_center" style="font-weight: bold">Recovery Action</span>
+			</span>
+			<span class="col7 checkCircleContainer">
+				<span class="input checkCircle calculate_center" name="recovery10min" value="<?php echo "".$a_character['recovery10min']; ?>"></span><br />
+				<span class="calculate_center" style="font-weight: bold">10 Min Recovery</span>
+			</span>
+			<span class="col7 checkCircleContainer">
+				<span class="input checkCircle calculate_center" name="recovery1hr" value="<?php echo "".$a_character['recovery1hr']; ?>"></span><br />
+				<span class="calculate_center" style="font-weight: bold">1 Hr Recovery</span>
+			</span>
+			<span class="col7 checkCircleContainer">
+				<span class="input checkCircle calculate_center" name="recovery10hr" value="<?php echo "".$a_character['recovery10hr']; ?>"></span><br />
+				<span class="calculate_center" style="font-weight: bold">10 Hr Recovery</span>
+			</span>
+			<span class="fill checkCircleContainer">
+				<span style="display: block;">
+					<span class="input checkCircle small sad" name="damageImpaired" value="<?php echo "".$a_character['damageImpaired']; ?>" style="display:inline-block;"></span>
+					<span class="fill" style="display:inline-block;">
+						<span style="font-weight: bold">Impaired</span><br />
+						<span style="font-size: 10px; height:60px;">+1 effort/level, Ignore minor/major effects, Combat rolls 17-20 only deal +1 damage</span>
+					</span>
+				</span>
+				<span style="display: block;">
+					<span class="input checkCircle small sad" name="damageDebilitated" value="<?php echo "".$a_character['damageDebilitated']; ?>" style="display:inline-block;"></span>
+					<span class="fill" style="display:inline-block;">
+						<span style="font-weight: bold">Debilitated</span><br />
+						<span style="font-size: 10px; height:60px;">Can't move more than immediate distance, can't move if speed is 0</span>
+					</span>
+				</span>
 			</span>
 			</div>
 
@@ -61,16 +105,6 @@ class character_funcs {
 
 		return $s_page;
 
-		// "benefitIncreaseCapabilities"=>0,
-		// "benefitMoveTowardPerfection"=>0, //bit
-		// "benefitExtraEffort"=>0, //bit
-		// "benefitSkillTraining"=>0, //bit
-		// "benefitOther"=>0, //bit
-		// "recoveryBonus"=>"2", //varchar
-		// "recoveryAction"=>0, //bit
-		// "recovery10min"=>0, //bit
-		// "recovery1hr"=>0, //bit
-		// "recovery10hr"=>0, //bit
 		// "damageImpaired"=>0, //bit
 		// "damageDebilitated"=>0, //bit
 		// "statMightPool"=>10, //int
@@ -200,7 +234,7 @@ class character_funcs {
 					var parentWidth = jparent.width();
 					currWidth = 0;
 					$.each(jsiblings, countWidthFunc);
-					jelement.css({"width": (parentWidth - currWidth - (parentWidth / 32)) + "px"});
+					jelement.css({"width": (parentWidth - currWidth - (parentWidth / 30)) + "px"});
 				};
 				var autoCenterFunc = function(k, v) {
 					var jelement = $(v);
