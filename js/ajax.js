@@ -95,8 +95,9 @@ function send_ajax_call_from_form_super(php_file_name, form_id, callback) {
 	});
 }
 
-function send_ajax_call_from_form(php_file_name, form_id) {
-	
+function send_ajax_call_from_form(php_file_name, form_id, is_async) {
+	if (arguments.length < 3 || is_async === undefined) is_async = false;
+
 	// get the form and its inputs
 	var jform = $("#"+form_id);
 	var inputs = get_values_in_form(jform);
@@ -128,46 +129,29 @@ function send_ajax_call_from_form(php_file_name, form_id) {
 		full_posts.push([name, value]);
 		posts[name] = value;
 	}
-	console.log(jform);
-	console.log(full_posts);
+	// console.log(jform);
+	// console.log(full_posts);
 
 	// init the errors label and send the data
 	set_html_and_fade_in(jerrors_label, "", "<span style='color:gray;'>Please wait...</span>");
-	var commands_array = retval_to_commands(send_ajax_call(php_file_name, posts));
-	set_html_and_fade_in(jerrors_label, "", "&nbsp;");
-	
-	// interpret commands send back
-	interpret_common_ajax_commands(commands_array);
-	for (var i = 0; i < commands_array.length; i++) {
-		var command = commands_array[i][0];
-		var note = commands_array[i][1];
-		if (command == "print failure") {
-			set_html_and_fade_in(jerrors_label, "", "<span style='color:red;'>"+note+"</span>");
-		} else if (command == "print success") {
-			set_html_and_fade_in(jerrors_label, "", "<span style='color:gray;font-weight:normal;'>"+note+"</span>");
-		} else if (command == "load page with post") {
-			var posts_string = "";
-			for (var i = 0; i < full_posts.length; i++)
-				posts_string += '<input type="hidden" name="'+full_posts[i][0]+'" value="'+full_posts[i][1]+'" />';
-			var id_string = get_unique_id();
-			var create_string = '<form method="POST" action="'+note+'" id="'+id_string+'">'+posts_string+'</form>';
-			$(create_string).appendTo("body");
-			$("#"+id_string).submit();
-		} else if (command == "clear field") {
-			jform.find("input[name="+note+"]").val("");
-		} else if (command == "set value") {
-			var parts = note;
-			$(parts.element_find_by).html('');
-			$(parts.element_find_by).html(parts.html);
-		} else if (command == "remove class") {
-			var parts = note;
-			$(parts.element_find_by).removeClass(parts['class']);
-		} else if (command == "add class") {
-			var parts = note;
-			$(parts.element_find_by).addClass(parts['class']);
-		}
+	if (is_async) {
+		send_async_ajax_call(php_file_name, posts, true, function(retval) {
+			interpret_commands(retval, jerrors_label);
+		});
+		return [];
+	} else {
+		var commands_array = interpret_commands(
+			send_ajax_call(php_file_name, posts),
+			jerrors_label
+		);
+		return commands_array;
 	}
-	
+}
+
+function interpret_commands(retval, jerrors_label) {
+	var commands_array = retval_to_commands(retval);
+	set_html_and_fade_in(jerrors_label, "", "&nbsp;");
+	interpret_common_ajax_commands(commands_array, jerrors_label);
 	return commands_array;
 }
 
@@ -189,7 +173,7 @@ function retval_to_commands(retval) {
 	return commands_array;
 }
 
-function interpret_common_ajax_commands(commands_array) {
+function interpret_common_ajax_commands(commands_array, jerrors_label) {
 	for (var i = 0; i < commands_array.length; i++) {
 		var command = commands_array[i][0];
 		var note = commands_array[i][1];
@@ -218,6 +202,30 @@ function interpret_common_ajax_commands(commands_array) {
 				setTimeout(function() { location.reload(true); }, parseInt(note));
 			else
 				location.reload(true);
+		} else if (command == "print failure") {
+			set_html_and_fade_in(jerrors_label, "", "<span style='color:red;'>"+note+"</span>");
+		} else if (command == "print success") {
+			set_html_and_fade_in(jerrors_label, "", "<span style='color:gray;font-weight:normal;'>"+note+"</span>");
+		} else if (command == "load page with post") {
+			var posts_string = "";
+			for (var i = 0; i < full_posts.length; i++)
+				posts_string += '<input type="hidden" name="'+full_posts[i][0]+'" value="'+full_posts[i][1]+'" />';
+			var id_string = get_unique_id();
+			var create_string = '<form method="POST" action="'+note+'" id="'+id_string+'">'+posts_string+'</form>';
+			$(create_string).appendTo("body");
+			$("#"+id_string).submit();
+		} else if (command == "clear field") {
+			jform.find("input[name="+note+"]").val("");
+		} else if (command == "set value") {
+			var parts = note;
+			$(parts.element_find_by).html('');
+			$(parts.element_find_by).html(parts.html);
+		} else if (command == "remove class") {
+			var parts = note;
+			$(parts.element_find_by).removeClass(parts['class']);
+		} else if (command == "add class") {
+			var parts = note;
+			$(parts.element_find_by).addClass(parts['class']);
 		}
 	}
 }

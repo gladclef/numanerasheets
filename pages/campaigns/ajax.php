@@ -135,6 +135,44 @@ class user_ajax {
 				new command("remove class", $a_parts)));
 		}
 	}
+
+	public static function update_character_sheet() {
+		global $global_user;
+
+		$cid = intval(trim(get_post_var("campaign_id")));
+		$charid = intval(trim(get_post_var("character_id")));
+		$column = trim(get_post_var("property"));
+		$value = trim(get_post_var("value"));
+		$b_is_gm = campaign_funcs::is_gm($cid);
+
+		// check for user access
+		$sb_has_access = campaign_funcs::has_character_access($cid, $charid, $b_is_gm);
+		if (is_string($sb_has_access)) {
+			return json_encode(array(
+				new command("print failure", $sb_has_access)));
+		} else if (!$sb_has_access) {
+			return json_encode(array(
+				new command("print failure", "You don't have access to this character.")));
+		}
+
+		// update the character
+		$sb_retval = campaign_funcs::update_character($charid, $column, $value);
+		if (is_string($sb_retval)) {
+			return json_encode(array(
+				new command("print failure", $sb_retval)));
+		} else if (!$sb_retval) {
+			return json_encode(array(
+				new command("print failure", "Failed to update")));
+		} else {
+			return json_encode(array(
+				new command("print success", "Changes synched")));
+		}
+	}
+
+	public static function set_floater_pos() {
+		$_SESSION["left"] = intval(get_post_var("left"));
+		$_SESSION["top"] = intval(get_post_var("top"));
+	}
 }
 
 if (!$global_user) {

@@ -74,6 +74,35 @@ function draw_character_tabs($a_characters, $b_is_gm) {
 	return $s_page;
 }
 
+function draw_floater($a_groups) {
+	$s_style = (isset($_SESSION["left"])) ? "left: {$_SESSION['left']}px; top: {$_SESSION['top']};" : "";
+
+	ob_start();
+	?>
+	<div id="floater" style="<?php echo $s_style; ?>">
+		<div class="dragHandle">
+			<input type="button" class="collapseButton" value="-">
+		</div>
+		<div class="links">
+			<?php
+			foreach ($a_groups as $s_group) {
+				echo "<div class=\"link\">";
+				echo "<div class=\"dragLink\"></div>";
+				echo $s_group;
+				echo "</div>";
+			}
+			?>
+		</div>
+		<label class="errors floater_errors">&nbsp;</label>
+		<input type="button" class="hidden" onclick="location.reload(true);" value="Reload to see changes">
+	</div>
+	<?php
+	$s_page = ob_get_contents();
+	ob_end_clean();
+
+	return $s_page;
+}
+
 function draw_campaign_page() {
 	global $global_user;
 	global $maindb;
@@ -84,14 +113,19 @@ function draw_campaign_page() {
 
 	if (!$b_is_gm)
 		character_funcs::check_create_character($cid);
+	$a_characters = campaign_funcs::get_characters($cid, $b_is_gm);
 
 	ob_start();
+
+	if (count($a_characters) > 0) {
+		$a_group_order = explode(",", $a_characters[0]['drawOrder']);
+		echo draw_floater($a_group_order);
+	}
 	?>
 	<div style="width: 1000px">
 		<h1 style="display: table"><?php echo $s_campaign_name; ?></h1>
 		<?php
 
-		$a_characters = campaign_funcs::get_characters($cid, $b_is_gm);
 		if (!is_array($a_characters)) {
 			echo "Database error";
 			return;
@@ -104,9 +138,9 @@ function draw_campaign_page() {
 		<?php
 
 		// draw the first character sheet
-		if (count($a_characters) > 0)
+		if (count($a_characters) > 0) {
 			echo character_funcs::draw_character($a_characters[0]);
-		else if ($b_is_gm) {
+		} else if ($b_is_gm) {
 			?>
 			<div style="padding: 20px; width: 300px; margin: 50px auto; border-radius: 10px; border: 1px solid black; background-color: #eee">
 				There are no characters created for this campaign, yet.<br />
@@ -118,25 +152,77 @@ function draw_campaign_page() {
 				</form>
 			</div>
 			<?php
-		}
-		else
+		} else {
 			echo "Programmer error!";
+		}
 
 		?>
 		</div>
-		<script type="text/javascript">
-			$(document).ready(function() {
-				var jheaders = $.merge($.merge($("h1"), $("h2")), $("h3"));
-				$.each(jheaders, function(k, v) {
-					var jheader = $(v);
-					jheader.css({
-						"width": jheader.width() + "px",
-						"margin": "0 auto"
-					});
-				});
-			});
-		</script>
 	</div>
+
+	<script type="text/javascript">
+		// styling scripts
+		$(document).ready(function() {
+			var jheaders = $.merge($.merge($("h1"), $("h2")), $("h3"));
+			var jfloater = $("#floater");
+			var jfloaterCollapseButton = jfloater.find(".collapseButton");
+			var adjustHeadersFunc = function(k, v) {
+				var jheader = $(v);
+				jheader.css({
+					"width": jheader.width() + "px",
+					"margin": "0 auto"
+				});
+			}
+			var collapseFloaterFunc = function(e) {
+				jfloater.stop();
+				if (jfloater.hasClass("collapsed")) {
+					jfloater.removeClass("collapsed");
+					jfloaterCollapseButton.attr('value', '-');
+					jfloater.animate({ width: "250px" });
+				} else {
+					jfloater.addClass("collapsed");
+					jfloaterCollapseButton.attr('value', '+');
+					jfloater.animate({ width: "26px" });
+				}
+			}
+			$.each(jheaders, adjustHeadersFunc);
+			jfloater.draggable({ handle: ".dragHandle", cancel: ".collapseButton" });
+			jfloaterCollapseButton.click(collapseFloaterFunc);
+		});
+
+		// functional scripts
+		$(document).ready(function() {
+			var jfloater = $("#floater");
+			var enforceFloaterLimits = function() {
+				var left = parseInt(jfloater.css("left"));
+				var top = parseInt(jfloater.css("top"));
+				var jdoc = $(document);
+				var maxRight = jdoc.width() - 250;
+				var maxBottom = jdoc.height() - 50;
+				if (left < 0) jfloater.css({ "left": "0px" })
+				if (top < 0) jfloater.css({ "top": "0px" })
+				if (left > maxRight) jfloater.css({ "left": (maxRight + "px") })
+				if (top > maxBottom) jfloater.css({ "top": (maxBottom + "px") })
+			}
+			var draggableProps = {
+				handle: ".dragHandle",
+				cancel: ".collapseButton",
+				containment: "document",
+				stop: function() {
+					var left = jfloater.css("left");
+					var top = jfloater.css("top");
+					posts = {
+						"command": "set_floater_pos",
+						"left": left,
+						"top": top
+					};
+					send_async_ajax_call("ajax.php", posts, true);
+				}
+			}
+			enforceFloaterLimits();
+			jfloater.draggable(draggableProps);
+		});
+	</script>
 	<?php
 	$s_page = ob_get_contents();
 	ob_end_clean();

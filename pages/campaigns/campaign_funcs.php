@@ -127,8 +127,7 @@ class campaign_funcs {
 		return $a_campaigns[0]['name'];
 	}
 
-	public static function is_gm($cid)
-	{
+	public static function is_gm($cid) {
 		global $global_user;
 
 		if (!$global_user)
@@ -140,8 +139,7 @@ class campaign_funcs {
 		return (intval($a_campaigns[0]['gmUser']) == $global_user->get_id());
 	}
 
-	public static function get_characters($cid, $b_is_gm)
-	{
+	public static function get_characters($cid, $b_is_gm) {
 		global $global_user;
 		global $maindb;
 
@@ -150,6 +148,59 @@ class campaign_funcs {
 		$a_characters = db_query("SELECT * FROM `[maindb]`.`characters` WHERE `campaign`='[cid]' {$s_filter_user}",
 		                         array("maindb"=>$maindb, "cid"=>$cid, "uid"=>$uid));
 		return $a_characters;
+	}
+
+	public static function has_character_access($cid, $charid, $b_is_gm) {
+		$a_characters = campaign_funcs::get_characters($cid, $b_is_gm);
+		if (!is_array($a_characters))
+			return "Database error";
+		foreach ($a_characters as $a_character) {
+			if (intval($a_character['id']) == intval($charid)) {
+				return TRUE;
+			}
+		}
+		return FALSE;
+	}
+
+	public static function update_character($charid, $s_column, $s_value) {
+		global $maindb;
+
+		$a_vals = array(
+			"maindb"=>$maindb,
+			"column"=>$s_column,
+			"value"=>$s_value,
+			"charid"=>$charid
+		);
+		$s_oldVal = "";
+
+		// get the current value
+		$a_characters = db_query("SELECT `[column]` FROM `[maindb]`.`characters` WHERE `id`='[charid]'", $a_vals);
+		if (!is_array($a_characters))
+			return "Database error! (1)";
+		if (count($a_characters) == 0)
+			return "Unknown character (1)";
+		$s_oldVal = $a_characters[0][$s_column];
+
+		// try to update to new value, replacing it with the old value if the updated value doesn't match the desired value
+		$b_success = db_query("UPDATE `[maindb]`.`characters` SET `[column]`='[value]' WHERE `id`='[charid]'", $a_vals);
+		if (!$b_success)
+			return "Database error! (2)";
+		$a_characters = db_query("SELECT `[column]` FROM `[maindb]`.`characters` WHERE `id`='[charid]'", $a_vals);
+		if (!is_array($a_characters))
+			return "Database error! (3)";
+		if (count($a_characters) == 0)
+			return "Unknown character (2)";
+		$s_updatedVal = "".$a_characters[0][$s_column];
+		if ($s_updatedVal !== ("".$s_value)) {
+			$a_vals["value"] = $s_oldVal;
+			db_query("UPDATE `[maindb]`.`characters` SET `[column]`='[value]' WHERE `id`='[charid]'", $a_vals);
+			if (substr("".$s_value, strlen($s_updatedVal)) == $s_updatedVal) {
+				return "Not enough room for the value of '{$s_column}' in database!";
+			}
+			return "Database error! (4)";
+		}
+
+		return TRUE;
 	}
 }
 

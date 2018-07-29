@@ -21,7 +21,7 @@ function draw_create_column() {
 				<div id="choose_campaign_name_form">
 					<input type="hidden" name="command" value="check_campaign_name">
 					<label>Choose a campaign name:</label><br />
-					<input type="textarea" size="30" name="campaign_name" placeholder="Eg: The Great Divide" onblur="send_ajax_call_from_form('ajax.php','choose_campaign_name_form');" onkeypress="if (event.keyCode==13){ $('#create_submit').click(); }" /><br />
+					<input type="textarea" size="30" name="campaign_name" placeholder="Eg: The Great Divide" onblur="send_ajax_call_from_form('ajax.php','choose_campaign_name_form', true);" onkeypress="if (event.keyCode==13){ $('#create_submit').click(); }" /><br />
 					<label class="errors hidden" id="campaign_name_errors">&nbsp;</label><br />
 				</div>
 

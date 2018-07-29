@@ -33,22 +33,22 @@ class character_funcs {
 				<span class="calculate_center">+4 to stat pools</span>
 			</span>
 			<span class="col5 checkCircleContainer">
-				<span class="input checkCircle calculate_center" name="benefitMoveTowardPerfection" value="<?php echo "".$a_character['benefitIncreaseCapabilities']; ?>"></span><br />
+				<span class="input checkCircle calculate_center" name="benefitMoveTowardPerfection" value="<?php echo "".$a_character['benefitMoveTowardPerfection']; ?>"></span><br />
 				<span class="calculate_center" style="font-weight: bold">Move Toward Perfection</span><br />
 				<span class="calculate_center">+1 edge</span>
 			</span>
 			<span class="col5 checkCircleContainer">
-				<span class="input checkCircle calculate_center" name="benefitExtraEffort" value="<?php echo "".$a_character['benefitIncreaseCapabilities']; ?>"></span><br />
+				<span class="input checkCircle calculate_center" name="benefitExtraEffort" value="<?php echo "".$a_character['benefitExtraEffort']; ?>"></span><br />
 				<span class="calculate_center" style="font-weight: bold">Extra Effort</span><br />
 				<span class="calculate_center">+1 effort</span>
 			</span>
 			<span class="col5 checkCircleContainer">
-				<span class="input checkCircle calculate_center" name="benefitSkillTraining" value="<?php echo "".$a_character['benefitIncreaseCapabilities']; ?>"></span><br />
+				<span class="input checkCircle calculate_center" name="benefitSkillTraining" value="<?php echo "".$a_character['benefitSkillTraining']; ?>"></span><br />
 				<span class="calculate_center" style="font-weight: bold">Skill Training</span><br />
 				<span class="calculate_center">Train & Specialize</span>
 			</span>
 			<span class="col5 checkCircleContainer">
-				<span class="input checkCircle calculate_center" name="benefitOther" value="<?php echo "".$a_character['benefitIncreaseCapabilities']; ?>"></span><br />
+				<span class="input checkCircle calculate_center" name="benefitOther" value="<?php echo "".$a_character['benefitOther']; ?>"></span><br />
 				<span class="calculate_center" style="font-weight: bold">Other</span><br />
 				<span class="calculate_center">Various Effects</span>
 			</span>
@@ -105,8 +105,6 @@ class character_funcs {
 
 		return $s_page;
 
-		// "damageImpaired"=>0, //bit
-		// "damageDebilitated"=>0, //bit
 		// "statMightPool"=>10, //int
 		// "statMightTotal"=>10, //int
 		// "statSpeedPool"=>10, //int
@@ -198,6 +196,7 @@ class character_funcs {
 		// check user access permissions
 		$uid = $global_user->get_id();
 		$cid = intval($a_character['campaign']);
+		$charid = intval($a_character['id']);
 		$char_userid = intval($a_character['user']);
 		if ($uid != $char_userid && !campaign_funcs::is_gm($cid))
 			return "You aren't authorized to see this character.";
@@ -215,11 +214,25 @@ class character_funcs {
 		<script type="text/javascript">
 			// styleing script
 			$(document).ready(function() {
+				var jtitle = $(".title");
 				var jautoCenter = $(".auto_center");
 				var jautoSize = $(".auto_size");
 				var jcalculateCenter = $(".calculate_center");
 				var jfill = $(".fill");
 				var currWidth = 0;
+				var collapseTitleFunc = function(e) {
+					var jelement = $(e.target);
+					var jgroup = jelement.parent();
+					var jother = jelement.siblings();
+					jother.stop();
+					if (jgroup.hasClass("collapsed")) {
+						jgroup.removeClass("collapsed");
+						jother.show(200);
+					} else {
+						jgroup.addClass("collapsed");
+						jother.hide(200);
+					}
+				};
 				var autoSizeFunc = function(k, v) {
 					var jelement = $(v);
 					jelement.css({"width": jelement.width() + "px"});
@@ -242,6 +255,12 @@ class character_funcs {
 					autoSizeFunc(k, jelement);
 					jelement.css({"margin-left": (jparent.width() / 2 - jelement.width() / 2 - 2) + "px"});
 				};
+				var collapseFloaterFunc = function(e) {
+					jfloater.stop();
+					var newWidth = (jfloater.hasClass("collapsed")) ? 250 : 50;
+					jfloater.animate({ width: (newWidth) + "px" });
+				}
+				jtitle.click(collapseTitleFunc);
 				$.each($.merge(jautoCenter, jautoSize), autoSizeFunc);
 				$.each(jfill, fillFunc);
 				$.each(jcalculateCenter, autoCenterFunc);
@@ -251,8 +270,36 @@ class character_funcs {
 			$(document).ready(function() {
 				var jcheckCircles = $(".checkCircle");
 				var jinputs = $("input");
-				var updateInputFunc = function(jinput) {
-
+				var updates = {};
+				var sendDelayedUpdate = function(name, val, jerrors_label) {
+					if (updates[name] != undefined) {
+						var update = updates[name];
+						clearTimeout(update.timeout);
+					}
+					updates[name] = {
+						"val": ("" + val),
+						"timeout": setTimeout(function() {
+							delete updates[name];
+							posts = {
+								"command": "update_character_sheet",
+								"campaign_id": "<?php echo $cid; ?>",
+								"character_id": "<?php echo $charid; ?>",
+								"property": name,
+								"value": val
+							};
+							set_html_and_fade_in(jerrors_label, "", "<span style='color:gray;font-weight:normal;'>syncing...</span>");
+							send_async_ajax_call("ajax.php", posts, true, function(retval) {
+								interpret_commands(retval, jerrors_label);
+							});
+						}, 1000)
+					};
+				};
+				var updateInputFunc = function(e) {
+					var jelement = $(e.target);
+					var name = jelement.attr("name");
+					var val = jelement.attr("value");
+					var jerrors_label = $("#floater").find(".floater_errors");
+					sendDelayedUpdate(name, val, jerrors_label);
 				}
 				var updateCheckCircleFunc = function(e) {
 					var jelement = $(e.target);

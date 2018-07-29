@@ -77,8 +77,33 @@ function dont_check_session_expired() {
 	return "";
 }
 
+function draw_favicon_links() {
+	$retval = array();
+	$retval[] = '<link rel="apple-touch-icon" sizes="57x57" href="/apple-icon-57x57.png">';
+	$retval[] = '<link rel="apple-touch-icon" sizes="60x60" href="/apple-icon-60x60.png">';
+	$retval[] = '<link rel="apple-touch-icon" sizes="72x72" href="/apple-icon-72x72.png">';
+	$retval[] = '<link rel="apple-touch-icon" sizes="76x76" href="/apple-icon-76x76.png">';
+	$retval[] = '<link rel="apple-touch-icon" sizes="114x114" href="/apple-icon-114x114.png">';
+	$retval[] = '<link rel="apple-touch-icon" sizes="120x120" href="/apple-icon-120x120.png">';
+	$retval[] = '<link rel="apple-touch-icon" sizes="144x144" href="/apple-icon-144x144.png">';
+	$retval[] = '<link rel="apple-touch-icon" sizes="152x152" href="/apple-icon-152x152.png">';
+	$retval[] = '<link rel="apple-touch-icon" sizes="180x180" href="/apple-icon-180x180.png">';
+	$retval[] = '<link rel="icon" type="image/png" sizes="192x192"  href="/android-icon-192x192.png">';
+	$retval[] = '<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">';
+	$retval[] = '<link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">';
+	$retval[] = '<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">';
+	$retval[] = '<link rel="icon" href="/favicon.ico" type="image/x-icon" />';
+	$retval[] = '<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />';
+	$retval[] = '<link rel="manifest" href="/manifest.json">';
+	$retval[] = '<meta name="msapplication-TileColor" content="#ffffff">';
+	$retval[] = '<meta name="msapplication-TileImage" content="/ms-icon-144x144.png">';
+	$retval[] = '<meta name="theme-color" content="#ffffff">';
+	return $retval;
+}
+
 function draw_page_head($outside_content = '') {
 	global $global_path_to_jquery;
+	global $global_path_to_jquery_ui;
 	$a_page = array();
 	$a_page[] = "<meta content=\"text/html;charset=utf-8\" http-equiv=\"Content-Type\">";
 	$a_page[] = "<html>";
@@ -92,6 +117,7 @@ function draw_page_head($outside_content = '') {
 	$a_page[] = "<link href='/css/descriptor_group.css' rel='stylesheet' type='text/css'>";
 	//$a_page[] = "<link href='/css/calendar.css' rel='stylesheet' type='text/css'>";
 	$a_page[] = '<script src="'.$global_path_to_jquery.'"></script>';
+	$a_page[] = '<script src="'.$global_path_to_jquery_ui.'"></script>';
 	$a_page[] = '<script src="/js/common_functions.js"></script>';
 	$a_page[] = '<script src="/js/ajax.js"></script>';
 	$a_page[] = '<script src="/js/login_logout.js"></script>';
@@ -103,6 +129,7 @@ function draw_page_head($outside_content = '') {
 	//$a_page[] = '<script src="/js/tab_custom.js"></script>';
 	//$a_page[] = '<script src="/js/calendar_preview.js"></script>';
 	//$a_page[] = '<script src="/js/feedback.js"></script>';
+	$a_page = array_merge($a_page, draw_favicon_links());
 	$a_page[] = dont_check_session_expired();
 	$a_page[] = "</head>";
 	$a_page[] = "<body>";

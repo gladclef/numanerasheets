@@ -13,6 +13,7 @@
 	color: gray;
 	font-weight: bold;
 	margin-bottom: 15px;
+	cursor: pointer;
 }
 .descriptor_group div { /* aka row */
 	margin-bottom: 15px;
@@ -91,4 +92,32 @@
 	display: inline-block;
 	font-size: 16px;
 	vertical-align: top;
+}
+
+#floater {
+	width: 250px;
+	position: fixed;
+	left: 0;
+	top: 190px;
+	padding: 5px;
+	border: 1px solid black;
+	border-radius: 5px;
+	background-color: white;
+	overflow: hidden;
+}
+#floater .dragHandle {
+	padding: 3px;
+	background-color: gray;
+	background-image: url("../../images/dragHandle.png");
+	border-radius: 5px;
+	cursor: move;
+}
+#floater .collapseButton {
+	width: 20px;
+	height: 20px;
+	border: 1px solid gray;
+	border-radius: 3px;
+	cursor: pointer;
+	padding-left: 5px; /* centers the "+" and "-" text */
+	padding-bottom: 5px;
 }
