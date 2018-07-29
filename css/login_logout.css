@@ -3,6 +3,7 @@
 	background-color: #aaa;
 	text-align: right;
 	padding: 5px 20px;
+	position: relative; /* this enables the embedding of absolute-position elements */
 }
 
 .logout_label {

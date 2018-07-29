@@ -5,6 +5,10 @@ function get_post_var($postname, $s_default = '') {
 	return isset($_POST[$postname]) ? $_POST[$postname] : $s_default;
 }
 
+function get_get_var($getname, $s_default = '') {
+	return isset($_GET[$getname]) ? $_GET[$getname] : $s_default;
+}
+
 function my_session_start() {
 	global $session_started;
 	if ($session_started === FALSE) {
@@ -85,6 +89,7 @@ function draw_page_head($outside_content = '') {
 	$a_page[] = "<link href='/css/auto_table.css' rel='stylesheet' type='text/css'>";
 	$a_page[] = "<link href='/css/Settings.css' rel='stylesheet' type='text/css'>";
 	$a_page[] = "<link href='/css/tabs.css' rel='stylesheet' type='text/css'>";
+	$a_page[] = "<link href='/css/descriptor_group.css' rel='stylesheet' type='text/css'>";
 	//$a_page[] = "<link href='/css/calendar.css' rel='stylesheet' type='text/css'>";
 	$a_page[] = '<script src="'.$global_path_to_jquery.'"></script>';
 	$a_page[] = '<script src="/js/common_functions.js"></script>';

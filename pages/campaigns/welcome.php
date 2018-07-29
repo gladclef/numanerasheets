@@ -10,6 +10,7 @@ function draw_create_column() {
 	global $global_user;
 	global $maindb;
 
+	ob_start();
 	?>
 	<div class="column">
 		<h1 style="margin: 0 auto;">Create a Campaign</h1>
@@ -60,12 +61,17 @@ function draw_create_column() {
 		</div>
 	</div>
 	<?php
+	$s_page = ob_get_contents();
+	ob_end_clean();
+
+	return $s_page;
 }
 
 function draw_join_column() {
 	global $global_user;
 	global $maindb;
 
+	ob_start();
 	?>
 	<div id="join" class="column">
 		<h1 style="margin: 0 auto;">Join Your Companions</h1>
@@ -151,12 +157,17 @@ function draw_join_column() {
 		}
 	</script>
 	<?php
+	$s_page = ob_get_contents();
+	ob_end_clean();
+
+	return $s_page;
 }
 
 function draw_continue_column() {
 	global $global_user;
 	global $maindb;
 
+	ob_start();
 	?>
 	<div id="resume" class="column">
 		<h1 style="margin: 0 auto;">Continue the Adventure</h1>
@@ -181,6 +192,10 @@ function draw_continue_column() {
 		</div>
 	</div>
 	<?php
+	$s_page = ob_get_contents();
+	ob_end_clean();
+
+	return $s_page;
 }
 
 function draw_welcome_page() {
@@ -192,9 +207,9 @@ function draw_welcome_page() {
 	<div class="row">
 		<?php
 
-		draw_create_column();
-		draw_join_column();
-		draw_continue_column();
+		echo draw_create_column();
+		echo draw_join_column();
+		echo draw_continue_column();
 
 		?>
 	</div>

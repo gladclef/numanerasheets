@@ -126,6 +126,31 @@ class campaign_funcs {
 			return "error";
 		return $a_campaigns[0]['name'];
 	}
+
+	public static function is_gm($cid)
+	{
+		global $global_user;
+
+		if (!$global_user)
+			return NULL;
+		$a_campaigns = campaign_funcs::get_campaigns($cid);
+		if (!is_array($a_campaigns))
+			return NULL;
+
+		return (intval($a_campaigns[0]['gmUser']) == $global_user->get_id());
+	}
+
+	public static function get_characters($cid, $b_is_gm)
+	{
+		global $global_user;
+		global $maindb;
+
+		$uid = $global_user->get_id();
+		$s_filter_user = ($b_is_gm) ? "" : "AND `user`='[uid]'";
+		$a_characters = db_query("SELECT * FROM `[maindb]`.`characters` WHERE `campaign`='[cid]' {$s_filter_user}",
+		                         array("maindb"=>$maindb, "cid"=>$cid, "uid"=>$uid));
+		return $a_characters;
+	}
 }
 
 ?>

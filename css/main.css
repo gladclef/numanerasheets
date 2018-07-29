@@ -292,3 +292,56 @@ form select {
 	black;
 	opacity: 0.2;
 }
+
+.descriptor_group {
+	width: 960px;
+	border: 1px solid black;
+	border-radius: 10px;
+	border-left-style: none;
+	border-right-style: none;
+	padding: 20px;
+	font-size: 25px;
+}
+
+.descriptor_group .col6 {
+	display: inline-block;
+	width: 156px;
+}
+.descriptor_group .col5 {
+	display: inline-block;
+	width: 185px;
+}
+.descriptor_group .col4 {
+	display: inline-block;
+	width: 230px;
+}
+.descriptor_group .col3 {
+	display: inline-block;
+	width: 310px;
+}
+.descriptor_group .col2 {
+	display: inline-block;
+	width: 470px;
+}
+.descriptor_group .auto_center {
+	display: table;
+	width: auto;
+	margin: 0 auto;
+}
+.descriptor_group .title {
+	font-size: 40px;
+	color: gray;
+	font-weight: bold;
+	margin-bottom: 15px;
+}
+.descriptor_group div { /* aka row */
+	margin-bottom: 15px;
+}
+.descriptor_group .auto_size {
+	width: auto;
+}
+.descriptor_group input[type=text] {
+	border-style: none;
+	border-bottom-style: solid;
+	font-size: 22px;
+}

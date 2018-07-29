@@ -1,7 +1,7 @@
 <?php
 require_once(dirname(__FILE__)."/../../resources/globals.php");
 
-function draw_logout_bar() {
+function draw_logout_bar($s_left_content = NULL) {
 	global $global_user;
 	global $maindb;
 
@@ -19,6 +19,8 @@ function draw_logout_bar() {
 
 	$s_retval = array();
 	$s_retval[] = "<table class='logout_bar'><tr><td>";
+	if (!is_null($s_left_content))
+		$s_retval[] = "<div style='position: absolute; left:10px; top:0px;'>{$s_left_content}</div>";
 	$s_retval[] = "Logged in: <span class='logout_label username_label'>".str_replace("__USERNAME__", $global_user->get_name(), $s_account_name)."</span>";
 	$s_retval[] = '<span class="logout_button" onmouseover="$(this).addClass(\'mouse_hover\');" onmouseout="$(this).removeClass(\'mouse_hover\');">Logout</span>';
 	$s_retval[] = "</td></tr></table>";

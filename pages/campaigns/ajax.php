@@ -7,6 +7,7 @@ require_once(dirname(__FILE__)."/../../resources/check_logged_in.php");
 require_once(dirname(__FILE__).'/campaign_funcs.php');
 require_once(dirname(__FILE__)."/../login/access_object.php");
 require_once(dirname(__FILE__)."/../../objects/command.php");
+require_once(dirname(__FILE__).'/character_funcs.php');
 
 class user_ajax {
 	public static function check_campaign_name() {
@@ -106,6 +107,29 @@ class user_ajax {
 		else
 		{
 			$a_parts = array("element_find_by"=>".campaign_join_errors", "class"=>"hidden");
+			return json_encode(array(
+				new command("print failure", $sb_retval),
+				new command("remove class", $a_parts)));
+		}
+	}
+
+	public static function create_character() {
+		global $global_user;
+
+		$uid = $global_user->get_id();
+		$cid = intval(trim(get_post_var("campaign_id")));
+
+		$sb_retval = character_funcs::create_character($cid, $uid);
+		$a_parts = array("element_find_by"=>".create_character_errors", "class"=>"hidden");
+		if ($sb_retval === TRUE)
+		{
+			return json_encode(array(
+				new command("print success", "Success! Character created!"),
+				new command("reload page", "3000"),
+				new command("remove class", $a_parts)));
+		}
+		else
+		{
 			return json_encode(array(
 				new command("print failure", $sb_retval),
 				new command("remove class", $a_parts)));
