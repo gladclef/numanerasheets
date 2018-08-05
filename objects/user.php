@@ -126,12 +126,15 @@ class user {
 	}
 	
 	public function save_user_classes($s_year, $s_semester, $s_json_saveval, $s_timestamp) {
+		return TRUE;
 		return $this->save_time_dependent_user_data($s_year, $s_semester, 'semester_classes', $s_json_saveval, $s_timestamp);
 	}
 	public function save_user_whitelist($s_year, $s_semester, $s_json_saveval, $s_timestamp) {
+		return TRUE;
 		return $this->save_time_dependent_user_data($s_year, $s_semester, 'semester_whitelist', $s_json_saveval, $s_timestamp);
 	}
 	public function save_user_blacklist($s_year, $s_semester, $s_json_saveval, $s_timestamp) {
+		return TRUE;
 		return $this->save_time_dependent_user_data($s_year, $s_semester, 'semester_blacklist', $s_json_saveval, $s_timestamp);
 	}
 	
@@ -249,6 +252,7 @@ class user {
 	}
 
 	private function load_user_classes($s_year, $s_semester) {
+		return array();
 		$a_user_data = $this->load_user_data($s_year, $s_semester, 'semester_classes');
 		if (!is_array($a_user_data) || count($a_user_data) == 0)
 				return array();
@@ -260,9 +264,11 @@ class user {
 		return $a_user_data;
 	}
 	private function load_user_whitelist($s_year, $s_semester) {
+		return array();
 		return $this->load_user_data($s_year, $s_semester, 'semester_whitelist');
 	}
 	private function load_user_blacklist($s_year, $s_semester) {
+		return array();
 		return $this->load_user_data($s_year, $s_semester, 'semester_blacklist');
 	}
 

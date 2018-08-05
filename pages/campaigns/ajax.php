@@ -136,16 +136,8 @@ class user_ajax {
 		}
 	}
 
-	public static function update_character_sheet() {
-		global $global_user;
-
-		$cid = intval(trim(get_post_var("campaign_id")));
-		$charid = intval(trim(get_post_var("character_id")));
-		$column = trim(get_post_var("property"));
-		$value = trim(get_post_var("value"));
+	public static function user_has_access($cid, $charid) {
 		$b_is_gm = campaign_funcs::is_gm($cid);
-
-		// check for user access
 		$sb_has_access = campaign_funcs::has_character_access($cid, $charid, $b_is_gm);
 		if (is_string($sb_has_access)) {
 			return json_encode(array(
@@ -154,9 +146,30 @@ class user_ajax {
 			return json_encode(array(
 				new command("print failure", "You don't have access to this character.")));
 		}
+		return TRUE;
+	}
+
+	public static function update_character_sheet() {
+		global $global_user;
+
+		$cid = intval(trim(get_post_var("campaign_id")));
+		$charid = intval(trim(get_post_var("character_id")));
+		$s_column = trim(get_post_var("property"));
+		$s_value = trim(get_post_var("value"));
+		$s_table = trim(get_post_var("table"));
+		$i_rowid = intval(trim(get_post_var("rowid")));
+
+		// check for user access
+		$sb_result = user_ajax::user_has_access($cid, $charid);
+		if ($sb_result !== TRUE)
+			return $sb_result;
 
 		// update the character
-		$sb_retval = campaign_funcs::update_character($charid, $column, $value);
+		if (isset($_POST["table"]) && $s_table != "" && $s_table != "characters") {
+			$sb_retval = campaign_funcs::update_table($s_table, $i_rowid, $s_column, $s_value);
+		} else {
+			$sb_retval = campaign_funcs::update_character($charid, $s_column, $s_value);
+		}
 		if (is_string($sb_retval)) {
 			return json_encode(array(
 				new command("print failure", $sb_retval)));
@@ -172,6 +185,209 @@ class user_ajax {
 	public static function set_floater_pos() {
 		$_SESSION["left"] = intval(get_post_var("left"));
 		$_SESSION["top"] = intval(get_post_var("top"));
+	}
+
+	public static function getNewVars($s_table, $cid) {
+		switch ($s_table) {
+			case 'artifacts':
+				return array(
+					"name"=>"",
+					"description"=>"",
+					"depletion"=>"",
+					"campaign"=>$cid,
+					"partyUnderstanding"=>""
+				);
+			case 'cyphers':
+				return array(
+					"name"=>"",
+					"level"=>"0",
+					"description"=>"",
+					"campaign"=>$cid,
+					"partyUnderstanding"=>""
+				);
+				break;
+			case 'skills':
+				return array(
+					"description"=>"",
+					"trained"=>0,
+					"skilled"=>0,
+					"inability"=>0,
+					"campaign"=>$cid
+				);
+			case 'abilities':
+				return array(
+					"description"=>"",
+					"name"=>"",
+					"cost"=>"",
+					"campaign"=>$cid
+				);
+			case 'inabilities':
+				return array(
+					"description"=>"",
+					"name"=>"",
+					"campaign"=>$cid
+				);
+			case 'equipment':
+				return array(
+					"description"=>"",
+					"name"=>"",
+					"campaign"=>$cid
+				);
+			case 'attacks':
+				return array(
+					"name"=>"",
+					"damage"=>"",
+					"modifier"=>"",
+					"notes"=>"",
+					"campaign"=>$cid
+				);
+			case 'armor':
+				return array(
+					"name"=>"",
+					"cost"=>"",
+					"modifier"=>"",
+					"speedReduction"=>"",
+					"notes"=>"",
+					"campaign"=>$cid
+				);
+			case 'oddities':
+				return array(
+					"name"=>"",
+					"description"=>"",
+					"campaign"=>$cid
+				);
+			case 'places':
+				return array(
+					"name"=>"",
+					"description"=>"",
+					"campaign"=>$cid
+				);
+			default:
+				return FALSE;
+		}
+	}
+
+	public static function addNew() {
+		global $global_user;
+		global $maindb;
+
+		$cid = intval(trim(get_post_var("campaign_id")));
+		$charid = intval(trim(get_post_var("character_id")));
+		$s_table = trim(get_post_var("table"));
+		$s_description = trim(get_post_var("description"));
+		$s_container = trim(get_post_var("container"));
+
+		// check for user access
+		$sb_result = user_ajax::user_has_access($cid, $charid);
+		if ($sb_result !== TRUE)
+			return $sb_result;
+
+		// create the element
+		$a_vars = user_ajax::getNewVars($s_table, $cid);
+		if ($a_vars === FALSE)
+			return json_encode(array(
+				new command("print failure", "Unknown table \"{$s_table}\"")));
+		$s_insert_str = array_to_insert_clause($a_vars);
+		$b_result = db_query("INSERT INTO `[maindb]`.`[table]` {$s_insert_str}",
+		                     array_merge(array("maindb"=>$maindb, "table"=>$s_table), $a_vars));
+		if (!$b_result)
+			return json_encode(array(
+				new command("print failure", "Database error creating new {$s_description}")));
+		$si_tableRowId = user_ajax::get_latest_insert_id($s_table);
+		if (is_string($si_tableRowId))
+			return json_encode(array(
+				new command("print failure", $si_tableRowId)));
+
+		// try to relate it to the character
+		$s_column = $s_table;
+		$s_table = $s_table;
+		$sb_result = character_funcs::add_reference_or_delete($charid, $s_column, $s_table, $si_tableRowId);
+
+		$b_is_gm = campaign_funcs::is_gm($cid);
+		$a_characters = campaign_funcs::get_characters($cid, $b_is_gm, $charid);
+		$a_entries = character_funcs::get_related_table_entries($a_characters[0], $s_table);
+		$s_drawFunc = "draw_{$s_table}";
+		$a_parts = array("element_find_by"=>"#{$s_container}", "html"=>character_funcs::$s_drawFunc($a_entries));
+		return json_encode(array(
+			new command("print success", "Created new {$s_description}"),
+			new command("set value", $a_parts),
+			new command("run script", "startupStyling(); startupFunctionality(); window.collapseids=\"{$a_characters[0]['collapseIds']}\"; collapseAll();")));
+	}
+
+	public static function remove() {
+		global $global_user;
+		global $maindb;
+
+		$cid = intval(trim(get_post_var("campaign_id")));
+		$charid = intval(trim(get_post_var("character_id")));
+		$i_rowid = intval(trim(get_post_var("rowid")));
+		$s_table = trim(get_post_var("table"));
+		$s_description = trim(get_post_var("description"));
+		$b_removeRow = (bool)$_POST["removeRow"];
+
+		// check for user access
+		$sb_result = user_ajax::user_has_access($cid, $charid);
+		if ($sb_result !== TRUE)
+			return $sb_result;
+
+		// remove the user's reference to it
+		$b_is_gm = campaign_funcs::is_gm($cid);
+		$a_characters = campaign_funcs::get_characters($cid, $b_is_gm, $charid);
+		$s_ids = str_replace("|{$i_rowid}|", "", $a_characters[0][$s_table]);
+		$sb_result = campaign_funcs::update_character($charid, $s_table, $s_ids);
+		if ($sb_result === FALSE)
+			return json_encode(array(
+				new command("print failure", "Database error removing {$s_description}")));
+		else if (is_string($sb_result))
+			return json_encode(array(
+				new command("print failure", $sb_result)));
+
+		// remove the row, maybe
+		if ($b_removeRow) {
+			db_query("DELETE FROM `[maindb]`.`[table]` WHERE `id`='[id]'",
+			         array("maindb"=>$maindb, "table"=>$s_table, "id"=>$i_rowid));
+		}
+
+		return json_encode(array(
+			new command("print success", "{$s_description} removed")));
+	}
+
+	public static function get_latest_insert_id($s_table) {
+		global $maindb;
+
+		$id = 0;
+		$a_ids = db_query("SELECT LAST_INSERT_ID() AS id");
+		if (is_array($a_ids) && count($a_ids) > 0)
+			$id = intval($a_ids[0]['id']);
+		if ($id == 0)
+			$a_ids = db_query("SELECT `id` FROM `[maindb]`.`[table]` ORDER BY `id` DESC LIMIT 1",
+			                  array("maindb"=>$maindb, "table"=>$s_table));
+		if (!is_array($a_ids) || count($a_ids) == 0) {
+			error_log("Database error while trying to get created instance id!");
+			return "Database error retrieving new instance's id";
+		}
+		return intval($a_ids[0]['id']);
+	}
+
+	public static function draw_character() {
+		global $global_user;
+
+		$cid = intval(trim(get_post_var("campaign_id")));
+		$charid = intval(trim(get_post_var("character_id")));
+		$b_is_gm = campaign_funcs::is_gm($cid);
+
+		// check for user access
+		$sb_result = user_ajax::user_has_access($cid, $charid);
+		if ($sb_result !== TRUE)
+			return $sb_result;
+
+		// get the character
+		$a_characters = campaign_funcs::get_characters($cid, $b_is_gm, $charid);
+		if (!is_array($a_characters) || count($a_characters) == 0)
+			return "Unknown character \"{$charid}\"";
+
+		// draw the character
+		return character_funcs::draw_character($a_characters[0]);
 	}
 }
 

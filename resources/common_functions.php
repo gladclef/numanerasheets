@@ -46,11 +46,11 @@ function remove_timestamp_on_saves() {
 	global $global_user;
 	$user_id = $global_user->get_id();
 	
-	$a_semester_classes = db_query("SELECT `id` FROM `[maindb]`.`[table]` WHERE `user_id`='[user_id]'", array("maindb"=>$maindb, "table"=>"semester_classes", "user_id"=>$user_id));
+	/*$a_semester_classes = db_query("SELECT `id` FROM `[maindb]`.`[table]` WHERE `user_id`='[user_id]'", array("maindb"=>$maindb, "table"=>"semester_classes", "user_id"=>$user_id));
 	if ($a_semester_classes === FALSE)
 			return;
 	foreach($a_semester_classes as $a_semester_class)
-			db_query("UPDATE `[maindb]`.`[table]` SET `time_submitted`='0000-00-00 00:00:00' WHERE `id`='[id]'", array("maindb"=>$maindb, "table"=>"semester_classes", "id"=>$a_semester_class['id']));
+			db_query("UPDATE `[maindb]`.`[table]` SET `time_submitted`='0000-00-00 00:00:00' WHERE `id`='[id]'", array("maindb"=>$maindb, "table"=>"semester_classes", "id"=>$a_semester_class['id']));*/
 }
 
 function logout_session() {
@@ -222,12 +222,29 @@ function get_real_semester($s_semester, $s_year) {
 	return $a_semester["semester"];
 }
 
-function endsWith($haystack, $needle)
-{
+function endsWith($haystack, $needle) {
     $length = strlen($needle);
 
     return $length === 0 || 
     (substr($haystack, -$length) === $needle);
+}
+
+function explodeIds($s_ids) {
+	if (!is_string($s_ids))
+		return $s_ids;
+	if ($s_ids == "")
+		return array();
+	$a_ids = explode("||", $s_ids);
+	return str_replace("|", "", $a_ids);
+}
+
+function escapeTextVals($a_vals, $a_keys) {
+	$a_vals_obj = new ArrayObject($a_vals);
+	$a_vals2 = $a_vals_obj->getArrayCopy();
+	foreach ($a_keys as $s_key) {
+		$a_vals2[$s_key] = htmlspecialchars($a_vals2[$s_key]);
+	}
+	return $a_vals2;
 }
 
 ?>

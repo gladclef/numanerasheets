@@ -226,6 +226,8 @@ function interpret_common_ajax_commands(commands_array, jerrors_label) {
 		} else if (command == "add class") {
 			var parts = note;
 			$(parts.element_find_by).addClass(parts['class']);
+		} else if (command == "run script") {
+			eval(note);
 		}
 	}
 }

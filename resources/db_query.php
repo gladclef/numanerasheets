@@ -56,8 +56,7 @@ function db_query($s_query, $a_values=NULL, $b_print_query = FALSE) {
  * If the update failed, or the entire value is not added, then the previous value is restored.
  * @return TRUE upon success, FALSE otherwise
  */
-function db_try_concat_str($s_database, $s_table, $s_column, $s_concatValName, $s_where_clause, $a_vals, $b_print_query = FALSE)
-{
+function db_try_concat_str($s_database, $s_table, $s_column, $s_concatValName, $s_where_clause, $a_vals, $b_print_query = FALSE) {
 	// get the current value
 	$a_current_vals = db_query("SELECT `id`,`[column]` FROM `[database]`.`[table]` {$s_where_clause}",
 	                           array_merge(array('database'=>$s_database, 'table'=>$s_table, 'column'=>$s_column), $a_vals), $b_print_query);

@@ -6,6 +6,17 @@
 	border-right-style: none;
 	padding: 20px;
 	font-size: 25px;
+	margin-bottom: 40px;
+}
+
+.largeText {
+	font-size: 22px;
+}
+.mediumText {
+	font-size: 16px;
+}
+.tinyText {
+	font-size: 12px;
 }
 
 .descriptor_group .title {
@@ -22,6 +33,7 @@
 	border-style: none;
 	border-bottom-style: solid;
 	font-size: 22px;
+	background-color: transparent;
 }
 .descriptor_group .checkCircle {
 	display: inline-block;
@@ -77,6 +89,10 @@
 	display: inline-block;
 	width: 470px;
 }
+.descriptor_group .col1 {
+	display: inline-block;
+	width: 955px;
+}
 
 .descriptor_group .auto_center {
 	display: table;
@@ -95,7 +111,7 @@
 }
 
 #floater {
-	width: 250px;
+	width: 150px;
 	position: fixed;
 	left: 0;
 	top: 190px;
@@ -120,4 +136,73 @@
 	cursor: pointer;
 	padding-left: 5px; /* centers the "+" and "-" text */
 	padding-bottom: 5px;
+}
+#floater .link .dragLink {
+	width: 12px;
+	height: 12px;
+	background-image: url("../../images/dragHandle.png");
+	background-size: 5px 30px;
+	border-radius: 2px;
+	cursor: move;
+	margin-right: 5px;
+	display: inline-block;
+}
+#floater .navigate {
+	color: blue;
+	text-decoration: underline;
+	cursor: pointer;
+}
+#floater .navigate:hover {
+	background-color: lightgray;
+}
+
+.descriptor_group .collapsibleHeader {
+	display: block;
+	cursor: pointer;
+	padding-left: 10px;
+	border-top-right-radius: 5px;
+	border-top-left-radius: 5px;
+	border: 1px solid lightgray;
+	background: lightgray;
+}
+.descriptor_group .collapsibleHeader.collapsed {
+	border-radius: 5px;
+}
+.descriptor_group .collapsibleBody {
+	padding-left: 20px;
+	border-bottom-right-radius: 5px;
+	border-bottom-left-radius: 5px;
+	border: 1px solid lightgray;
+}
+
+.descriptor_group .closeButton {
+	width: 27px;
+	height: 27px;
+	display: inline-block;
+	border: 1px solid black;
+	border-radius: 4px;
+	text-align: center;
+	cursor: pointer;
+	background-color: white;
+	float: right;
+	margin: 2px;
+	font-size: 22px;
+}
+.descriptor_group .closeButton.small {
+	width: 20px;
+	height: 20px;
+	font-size: 16px;
+}
+
+.descriptor_group textarea {
+	border: 1px solid lightgray;
+	border-radius: 10px;
+	padding: 10px;
+}
+.descriptor_group textarea.smallTextarea {
+	border-left: none;
+	border-top: none;
+	border-radius: 0;
+	padding: 0;
+	margin-bottom: -5px;
 }

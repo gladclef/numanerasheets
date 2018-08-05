@@ -28,8 +28,8 @@ class user_funcs {
 		}
 		
 		// create the user
-		db_query("INSERT INTO `[maindb]`.`users` (`username`,`pass`,`email`,`accesses`,`creation`,`campaigns`,`characters`,`disabled`) VALUES ('[username]',AES_ENCRYPT('[username]','[password]'),'[email]','[accesses]','[creation]','[campaigns]','[characters]','[disabled]')",
-				 array('maindb'=>$maindb, 'username'=>$s_username, 'password'=>$s_password, 'email'=>$s_email, 'accesses'=>$s_access, 'creation'=>date("Y-m-d H:i:s"), 'campaigns'=>'', 'characters'=>'', 'disabled'=>0));
+		db_query("INSERT INTO `[maindb]`.`users` (`username`,`pass`,`email`,`accesses`,`creation`,`characters`,`disabled`) VALUES ('[username]',AES_ENCRYPT('[username]','[password]'),'[email]','[accesses]','[creation]','[characters]','[disabled]')",
+				 array('maindb'=>$maindb, 'username'=>$s_username, 'password'=>$s_password, 'email'=>$s_email, 'accesses'=>$s_access, 'creation'=>date("Y-m-d H:i:s"), 'characters'=>'', 'disabled'=>0));
 		if ($mysqli->affected_rows > 0) {
 			return TRUE;
 		}

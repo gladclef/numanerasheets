@@ -154,6 +154,11 @@ table.main_page_content {
 	display:block;
 	margin:1px;
 }
+.smallTitle {
+	color: gray;
+	font-weight: bold;
+	font-size: 30px;
+}
 .account_management_section .body{
 	margin-left:20px;
 	margin-bottom:16px;

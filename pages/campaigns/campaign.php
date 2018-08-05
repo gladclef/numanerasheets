@@ -23,7 +23,7 @@ function draw_back_to_welcome() {
 	return $s_page;
 }
 
-function draw_character_tabs($a_characters, $b_is_gm) {
+function draw_character_tabs($a_characters, $b_is_gm, $cid) {
 	global $fqdn;
 
 	ob_start();
@@ -38,7 +38,7 @@ function draw_character_tabs($a_characters, $b_is_gm) {
 			$charid = $a_character['id'];
 			$s_char_name = $a_character['name'];
 			if ($b_is_gm)
-				$s_char_name = substr($s_char_name, 40);
+				$s_char_name = substr($s_char_name, 0, 40);
 			$s_js = "onclick='draw_character({$charid})' onmouseover='$(this).addClass(\"mouse_hover\")' onmouseout='$(this).removeClass(\"mouse_hover\")'";
 			echo "<div class='tab {$s_selected}' charid='{$charid}' {$s_js}>{$s_char_name}</div>";
 			$s_selected = "";
@@ -59,7 +59,8 @@ function draw_character_tabs($a_characters, $b_is_gm) {
 			// update the sheet
 			var sheet = send_ajax_call("ajax.php", {
 				"command": "draw_character",
-				"charid": charid
+				"campaign_id": <?php echo $cid; ?>,
+				"character_id": charid
 			});
 			jsheetContainer.html('');
 			jsheetContainer.html(sheet);
@@ -88,13 +89,13 @@ function draw_floater($a_groups) {
 			foreach ($a_groups as $s_group) {
 				echo "<div class=\"link\">";
 				echo "<div class=\"dragLink\"></div>";
-				echo $s_group;
+				echo "<span onclick=\"navigate(this);\" class=\"fill navigate\" style=\"display: inline-block;\">$s_group</span>";
 				echo "</div>";
 			}
 			?>
 		</div>
 		<label class="errors floater_errors">&nbsp;</label>
-		<input type="button" class="hidden" onclick="location.reload(true);" value="Reload to see changes">
+		<input type="button" class="hidden reloadButton" onclick="location.reload(true);" value="Reload to see changes">
 	</div>
 	<?php
 	$s_page = ob_get_contents();
@@ -110,6 +111,7 @@ function draw_campaign_page() {
 	$cid = intval(trim(get_get_var("id")));
 	$b_is_gm = campaign_funcs::is_gm($cid);
 	$s_campaign_name = campaign_funcs::get_name($cid);
+	$charid = "";
 
 	if (!$b_is_gm)
 		character_funcs::check_create_character($cid);
@@ -120,6 +122,7 @@ function draw_campaign_page() {
 	if (count($a_characters) > 0) {
 		$a_group_order = explode(",", $a_characters[0]['drawOrder']);
 		echo draw_floater($a_group_order);
+		$charid = $a_characters[0]['id'];
 	}
 	?>
 	<div style="width: 1000px">
@@ -131,7 +134,7 @@ function draw_campaign_page() {
 			return;
 		}
 		if ($b_is_gm)
-			echo draw_character_tabs($a_characters, $b_is_gm);
+			echo draw_character_tabs($a_characters, $b_is_gm, $cid);
 
 		?>
 		<div id="sheet_container">
@@ -178,7 +181,7 @@ function draw_campaign_page() {
 				if (jfloater.hasClass("collapsed")) {
 					jfloater.removeClass("collapsed");
 					jfloaterCollapseButton.attr('value', '-');
-					jfloater.animate({ width: "250px" });
+					jfloater.animate({ width: "150px" });
 				} else {
 					jfloater.addClass("collapsed");
 					jfloaterCollapseButton.attr('value', '+');
@@ -193,11 +196,14 @@ function draw_campaign_page() {
 		// functional scripts
 		$(document).ready(function() {
 			var jfloater = $("#floater");
+			var jfloaterLinks = jfloater.find(".links");
+			var jerrors_label = jfloater.find(".errors");
+			var jreloadButton = jfloater.find(".reloadButton");
 			var enforceFloaterLimits = function() {
 				var left = parseInt(jfloater.css("left"));
 				var top = parseInt(jfloater.css("top"));
 				var jdoc = $(document);
-				var maxRight = jdoc.width() - 250;
+				var maxRight = jdoc.width() - 150;
 				var maxBottom = jdoc.height() - 50;
 				if (left < 0) jfloater.css({ "left": "0px" })
 				if (top < 0) jfloater.css({ "top": "0px" })
@@ -219,7 +225,40 @@ function draw_campaign_page() {
 					send_async_ajax_call("ajax.php", posts, true);
 				}
 			}
+			var enableLinksFunc = function() {
+				var charid = parseInt($("#character_id").attr("value"));
+				jfloaterLinks.sortable({
+					handle: ".dragLink",
+					stop: function(event, ui) {
+						var jlinks = jfloaterLinks.find(".link");
+						var order = null;
+						$.each(jlinks, function(k, v) {
+							if (order == null)
+								order = "";
+							else
+								order += ",";
+							order += $(v).text().trim();
+						});
+						posts = {
+							"command": "update_character_sheet",
+							"campaign_id": "<?php echo $cid; ?>",
+							"character_id": charid,
+							"property": "drawOrder",
+							"value": order
+						};
+						set_html_and_fade_in(jerrors_label, "", "<span style='color:gray;font-weight:normal;'>syncing...</span>");
+						send_async_ajax_call("ajax.php", posts, true, function(retval) {
+							interpret_commands(retval, jerrors_label);
+							if (retval.indexOf("print success") >= 0) {
+								jreloadButton.show(200);
+							}
+						});
+					}
+				});
+				jfloaterLinks.disableSelection();
+			}
 			enforceFloaterLimits();
+			enableLinksFunc();
 			jfloater.draggable(draggableProps);
 		});
 	</script>
