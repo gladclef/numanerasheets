@@ -50,6 +50,48 @@ class user_ajax {
 			new command("reload page", "3000")));
 	}
 
+	public static function update_campaign() {
+		global $maindb;
+		global $fqdn;
+
+		$cid = trim(get_post_var('campaignId'));
+		$s_name = trim(get_post_var('campaign_name'));
+		$b_public = intval(trim(get_post_var('public')));
+		$b_passProtected = intval(trim(get_post_var('passProtected')));
+		$sn_pass = get_post_var('pass');
+		$sn_pass = (strlen($sn_pass) > 0) ? $sn_pass : NULL;
+
+		// check for permissions
+		$b_is_gm = campaign_funcs::is_gm($cid);
+		if (!$b_is_gm)
+			return json_encode(array(
+				new command("print failure", "You must be the GM to modify this campaign.")));
+
+		// update the campaign!
+		$a_vars = array(
+			"name"=>$s_name,
+			"public"=>($b_public ? 1 : 0),
+			"passProtected"=>($b_passProtected ? 1 : 0)
+		);
+		$s_update = array_to_update_clause($a_vars);
+		if ($sn_pass != NULL) {
+			$a_vars = array_merge($a_vars, array("pass"=>$sn_pass));
+			$s_update .= ",`pass`=AES_ENCRYPT('[name]','[pass]')";
+		}
+		$a_whereVars = array(
+			"id"=>$cid
+		);
+		$s_where = array_to_where_clause($a_whereVars);
+		$b_success = db_query("UPDATE `[maindb]`.`campaigns` SET {$s_update} WHERE {$s_where}",
+		                      array_merge(array("maindb"=>$maindb), $a_vars, $a_whereVars));
+
+		if (!$b_success)
+			return json_encode(array(
+				new command("print failure", "Database error")));
+		return json_encode(array(
+			new command("print success", "Campaign updated!")));
+	}
+
 	public static function search_campaign() {
 		global $maindb;
 		global $fqdn;
@@ -91,18 +133,9 @@ class user_ajax {
 		$sb_retval = campaign_funcs::join_campaign($cid, $password, $shareKey, $uid);
 		if ($sb_retval === TRUE)
 		{
-			$s_campaign_name = campaign_funcs::get_name($cid);
-			$s_success = "<div style='width:230px; background-color:#0d0; padding:20px; border-radius:10px; border:#0a0 solid 2px; margin:0 auto;'>Success! Joined the campaign \"{$s_campaign_name}\".</div>";
-			$a_parts1 = array("element_find_by"=>"#join_campaign_form", "html"=>$s_success);
-			$a_parts2 = array("element_find_by"=>"#success", "class"=>"hidden");
-			$a_commands = array(
-				new command("set value", $a_parts1),
-				new command("remove class", $a_parts2));
-			if (is_null($shareKey)) {
-				$a_commands = array_merge($a_commands, array(
-					new command("reload page", "3000")));
-			}
-			return json_encode($a_commands);
+			$s_campaign_name = htmlspecialchars(campaign_funcs::get_name($cid));
+			return json_encode(array(
+				new command("print success", "Successfully joined the campaign \"{$s_campaign_name}\"!")));
 		}
 		else
 		{
@@ -111,6 +144,31 @@ class user_ajax {
 				new command("print failure", $sb_retval),
 				new command("remove class", $a_parts)));
 		}
+	}
+
+	public static function kick_user() {
+		global $maindb;
+
+		$cid = trim(get_post_var('campaignId'));
+		$uid = trim(get_post_var('userId'));
+
+		// check for permissions
+		$b_is_gm = campaign_funcs::is_gm($cid);
+		if (!$b_is_gm)
+			return json_encode(array(
+				new command("print failure", "Only the campaign GM may kick users.")));
+
+		// update the campaign
+		$a_campaigns = campaign_funcs::get_campaigns($cid);
+		$s_users = str_replace("|{$uid}|", "", $a_campaigns[0]['users']);
+		$b_success = db_query("UPDATE `[maindb]`.`campaigns` SET `users`='[users]' WHERE `id`='[id]'",
+		         array("maindb"=>$maindb, "users"=>$s_users, "id"=>$cid));
+		if (!$b_success)
+			return json_encode(array(
+				new command("print failure", "Only the campaign GM may kick users.")));
+
+		return json_encode(array(
+			new command("print success", "User was kicked.")));
 	}
 
 	public static function create_character() {
@@ -400,7 +458,8 @@ if (isset($_POST['command'])) {
 		$o_ajax = new user_ajax();
 		$s_command = $_POST['command'];
 		if (method_exists($o_ajax, $s_command)) {
-				echo user_ajax::$s_command();
+				$s_response = user_ajax::$s_command();
+				echo $s_response;
 		} else {
 				echo json_encode(array(
 					'bad command'));

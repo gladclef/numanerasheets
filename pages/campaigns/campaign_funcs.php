@@ -74,7 +74,7 @@ class campaign_funcs {
 		$a_vals = array("maindb"=>$maindb, "cid"=>$cid, "uid"=>"|{$uid}|", "pass"=>$s_pass, "shareKey"=>$s_shareKey);
 
 		// verify password/share key
-		$s_passSearch = is_null($s_pass) ? "" : "AND `pass`=AES_ENCRYPT(CONCAT('rainbow',`name`),'[pass]')";
+		$s_passSearch = is_null($s_pass) ? "" : "AND `pass`=AES_ENCRYPT(`name`,'[pass]')";
 		$s_shareKeySearch = is_null($s_shareKey) ? "" : "AND `shareKey`='[shareKey]'";
 		$a_campaigns = db_query("SELECT * FROM `[maindb]`.`campaigns` WHERE `id`='[cid]' {$s_passSearch} {$s_shareKeySearch}", $a_vals);
 		if (!is_array($a_campaigns))
@@ -122,7 +122,7 @@ class campaign_funcs {
 
 	public static function get_name($cid) {
 		$a_campaigns = campaign_funcs::get_campaigns($cid);
-		if (!is_array($a_campaigns))
+		if (!is_array($a_campaigns) || count($a_campaigns) == 0)
 			return "error";
 		return $a_campaigns[0]['name'];
 	}
@@ -139,11 +139,12 @@ class campaign_funcs {
 		return (intval($a_campaigns[0]['gmUser']) == $global_user->get_id());
 	}
 
-	public static function get_characters($cid, $b_is_gm, $charid = NULL) {
+	public static function get_characters($cid, $b_is_gm, $charid = NULL, $uid = NULL) {
 		global $global_user;
 		global $maindb;
 
-		$uid = $global_user->get_id();
+		if ($uid === NULL)
+			$uid = $global_user->get_id();
 		$s_filter_user = ($b_is_gm) ? "" : "AND `user`='[uid]'";
 		$s_filter_user .= ($charid == NULL) ? "" : " AND `id`='[charid]'";
 		$a_characters = db_query("SELECT * FROM `[maindb]`.`characters` WHERE `campaign`='[cid]' {$s_filter_user}",

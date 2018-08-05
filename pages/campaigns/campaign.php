@@ -38,7 +38,7 @@ function draw_character_tabs($a_characters, $b_is_gm, $cid) {
 			$charid = $a_character['id'];
 			$s_char_name = $a_character['name'];
 			if ($b_is_gm)
-				$s_char_name = substr($s_char_name, 0, 40);
+				$s_char_name = htmlspecialchars(substr($s_char_name, 0, 40));
 			$s_js = "onclick='draw_character({$charid})' onmouseover='$(this).addClass(\"mouse_hover\")' onmouseout='$(this).removeClass(\"mouse_hover\")'";
 			echo "<div class='tab {$s_selected}' charid='{$charid}' {$s_js}>{$s_char_name}</div>";
 			$s_selected = "";
@@ -110,7 +110,8 @@ function draw_campaign_page() {
 
 	$cid = intval(trim(get_get_var("id")));
 	$b_is_gm = campaign_funcs::is_gm($cid);
-	$s_campaign_name = campaign_funcs::get_name($cid);
+	$s_campaign_name = htmlspecialchars(campaign_funcs::get_name($cid));
+	$s_campaign_link = ($b_is_gm) ? "<a href=\"modify_campaign.php?id={$cid}\">{$s_campaign_name}</a>" : $s_campaign_name;
 	$charid = "";
 
 	if (!$b_is_gm)
@@ -126,7 +127,7 @@ function draw_campaign_page() {
 	}
 	?>
 	<div style="width: 1000px">
-		<h1 style="display: table"><?php echo $s_campaign_name; ?></h1>
+		<h1 style="display: table"><?php echo $s_campaign_link; ?></h1>
 		<?php
 
 		if (!is_array($a_characters)) {
@@ -172,7 +173,7 @@ function draw_campaign_page() {
 			var adjustHeadersFunc = function(k, v) {
 				var jheader = $(v);
 				jheader.css({
-					"width": jheader.width() + "px",
+					"width": (jheader.width()*1.1) + "px",
 					"margin": "0 auto"
 				});
 			}

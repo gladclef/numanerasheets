@@ -731,7 +731,7 @@ class character_funcs {
 			));
 			?>
 				<div>
-					<?php echo "<span class=\"collapsibleHeader\" style=\"font-size:30px;\">{$s_title}</span>" ?>
+					<?php echo "<span class=\"collapsibleHeader\" collapseid=\"Rel{$s_key}\" style=\"font-size:30px;\">{$s_title}</span>" ?>
 					<div class="collapsibleBody">
 						<?php echo "<textarea class=\"fill collapsibleBody\" name=\"{$s_key}\" placeholder=\"{$s_title}\" rowid=\"{$a_character2['id']}\" rows=\"15\">{$a_character2[$s_key]}</textarea>"; ?>
 					</div>
@@ -760,7 +760,7 @@ class character_funcs {
 		<div>
 			<span class="collapsibleHeader" collapseid="place<?php echo $a_place2['id']; ?>">
 				<span class="auto_size">Name: </span>
-				<input class="col4" type="text" name="name" value="<?php echo $a_place2['name']; ?>" placeholder="name" table="places" rowid="<?php echo $a_place2['id']; ?>">
+				<input class="col2" type="text" name="name" value="<?php echo $a_place2['name']; ?>" placeholder="name" table="places" rowid="<?php echo $a_place2['id']; ?>">
 				<span class="closeButton" onclick="remove(this, <?php echo $a_place2['id']; ?>, 'places', 'Place', true);">X</span>
 			</span>
 			<div class="collapsibleBody" style="padding:5px 0 5px 5px;">
@@ -882,6 +882,7 @@ class character_funcs {
 		$cid = intval($a_character['campaign']);
 		$charid = intval($a_character['id']);
 		$char_userid = intval($a_character['user']);
+		$s_campaign_name = htmlspecialchars(campaign_funcs::get_name($cid));
 		if ($uid != $char_userid && !campaign_funcs::is_gm($cid))
 			return "You aren't authorized to see this character.";
 
@@ -1004,7 +1005,7 @@ class character_funcs {
 					setTimeout(function() { $.each($(".collapsibleHeader"), autoCollapse); }, 500);
 				};
 				var setWindowTitle = function() {
-					window.basicTitle = "<?php echo htmlspecialchars($a_character['name']); ?> (" + window.location.href + ")";
+					window.basicTitle = "<?php echo $s_campaign_name; ?> (" + window.location.href + ")";
 					document.title = window.basicTitle;
 				}
 				$.each(jtitles, collapseTitlesFunc);
