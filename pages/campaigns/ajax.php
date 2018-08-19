@@ -8,6 +8,7 @@ require_once(dirname(__FILE__).'/campaign_funcs.php');
 require_once(dirname(__FILE__)."/../login/access_object.php");
 require_once(dirname(__FILE__)."/../../objects/command.php");
 require_once(dirname(__FILE__).'/character_funcs.php');
+require_once(dirname(__FILE__).'/welcome_funcs.php');
 
 class user_ajax {
 	public static function check_campaign_name() {
@@ -134,8 +135,10 @@ class user_ajax {
 		if ($sb_retval === TRUE)
 		{
 			$s_campaign_name = htmlspecialchars(campaign_funcs::get_name($cid));
+			$a_parts = array("element_find_by"=>"#resume", "html"=>welcome_funcs::draw_continue_column());
 			return json_encode(array(
-				new command("print success", "Successfully joined the campaign \"{$s_campaign_name}\"!")));
+				new command("print success", "Successfully joined the campaign \"{$s_campaign_name}\"!"),
+				new command("set value", $a_parts)));
 		}
 		else
 		{
