@@ -44,6 +44,59 @@ function get_session_expired($b_isRecentActivity = FALSE) {
 	}
 }
 
+function draw_disclaimer_bar() {
+
+	ob_start();
+	?>
+	<div class="disclaimer"><div
+		class="short">
+			Numenera and its logo are trademarks of Monte Cook Games, LLC in the U.S.A. and other countries.
+			All Monte Cook Games characters and character names, and the distinctive likenesses thereof, are trademarks of Monte Cook Games, LLC.
+			Content derived from Monte Cook Games publications is © 2013-2017 Monte Cook Games, LLC.
+		</div><div
+		class="long">
+			The Monte Cook Games logo, Numenera, and the Numenera logo are trademarks of Monte Cook Games, LLC in the U.S.A. and other countries.
+			All Monte Cook Games characters and character names, and the distinctive likenesses thereof, are trademarks of Monte Cook Games, LLC.
+			Content on this site or associated files derived from Monte Cook Games publications is © 2013-2017 Monte Cook Games, LLC.
+			Monte Cook Games permits web sites and similar fan-created publications for their games, subject to the policy given at <a href="http://www.montecookgames.com/fan-use-policy/">http://www.montecookgames.com/fan-use-policy/</a>.
+			The contents of this site are for personal, non-commercial use only.
+			Monte Cook Games is not responsible for this site or any of the content, that did not originate directly from Monte Cook Games, on or in it.
+			Use of Monte Cook Games’s trademarks and copyrighted materials anywhere on this site and its associated files should not be construed as a challenge to those trademarks or copyrights.
+			Materials on this site may not be reproduced or distributed except with the permission of the site owner and in compliance with Monte Cook Games policy given at <a href="http://www.montecookgames.com/fan-use-policy/">http://www.montecookgames.com/fan-use-policy/</a>.
+		</div>
+	</div>
+	<script type="text/javascript">
+		$(document).ready(function() {
+			var jdisclaimer = $(".disclaimer");
+			var jshort = jdisclaimer.find(".short");
+			var jlong = jdisclaimer.find(".long");
+			var jlink = jdisclaimer.find("a");
+			var longVisible = false;
+
+			jdisclaimer.click(function() {
+				jshort.stop();
+				jlong.stop();
+				if (longVisible) {
+					jshort.show(200);
+					jlong.hide(200);
+				} else {
+					jshort.hide(200);
+					jlong.show(200);
+				}
+				longVisible = !longVisible;
+			});
+			jlink.click(function(e) {
+				e.stopPropagation();
+			});
+		});
+	</script>
+	<?php
+	$s_page = ob_get_contents();
+	ob_end_clean();
+
+	return $s_page;
+}
+
 // returns a string for the login page
 function draw_login_page($session_expired_message) {
 
@@ -94,6 +147,7 @@ function draw_login_page($session_expired_message) {
 	</div>
 	<?php
 	$s_page = ob_get_contents();
+	$s_page .= draw_disclaimer_bar();
 	ob_end_clean();
 
 	$a_page[] = draw_page_head();
