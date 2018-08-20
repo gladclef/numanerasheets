@@ -881,13 +881,13 @@ class character_funcs {
 		$uid = $global_user->get_id();
 		$cid = intval($a_character['campaign']);
 		$charid = intval($a_character['id']);
-		$char_userid = intval($a_character['user']);
-		$s_campaign_name = htmlspecialchars(campaign_funcs::get_name($cid));
-		if ($uid != $char_userid && !campaign_funcs::is_gm($cid))
+		$b_has_access = strpos($a_character['users'], "|{$uid}|") !== FALSE;
+		if (!$b_has_access && !campaign_funcs::is_gm($cid))
 			return "You aren't authorized to see this character.";
 
 		// draw each group
 		$s_page = "";
+		$s_campaign_name = htmlspecialchars(campaign_funcs::get_name($cid));
 		$a_group_order = explode(",", $a_character['drawOrder']);
 		foreach ($a_group_order as $s_group)
 		{
@@ -1214,7 +1214,7 @@ class character_funcs {
 			"campaignJournal"=>"", //varchar
 			"accomplishments"=>"", //varchar
 			"campaign"=>$cid, //int
-			"user"=>$uid, //int
+			"users"=>"|{$uid}|", //int
 			"drawOrder"=>"Core,Cyphers,Artifacts,Skills,Abilities,Equipment,Combat,Oddities,Character_Relations,Places,Journal,Description", //varchar
 			"collapseIds"=>""
 
@@ -1232,7 +1232,7 @@ class character_funcs {
 		if (is_array($a_char_ids) && count($a_char_ids) > 0)
 			$charid = intval($a_char_ids[0]['id']);
 		if ($charid == 0)
-			$a_char_ids = db_query("SELECT `id` FROM `[maindb]`.`characters` WHERE `user`='[uid]'",
+			$a_char_ids = db_query("SELECT `id` FROM `[maindb]`.`characters` WHERE INSTR(`users`,'|[uid]|')",
 			                       array("maindb"=>$maindb, "uid"=>$uid));
 		if (!is_array($a_char_ids) || count($a_char_ids) == 0) {
 			error_log("Database error while trying to get created character's id!");
