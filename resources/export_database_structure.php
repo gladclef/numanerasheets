@@ -44,6 +44,7 @@ function drawOptions() {
 
 function saveTables() {
 	$filename = dirname(__FILE__)."/../database_desc.txt";
+	file_put_contents($filename, serialize(array()));
 	$a_tables = unserialize(file_get_contents($filename));
 	$a_new_tables = array("Tables"=>getTables());
 	$a_tables = array_merge($a_tables, $a_new_tables);

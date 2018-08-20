@@ -168,10 +168,58 @@ class user_ajax {
 		         array("maindb"=>$maindb, "users"=>$s_users, "id"=>$cid));
 		if (!$b_success)
 			return json_encode(array(
-				new command("print failure", "Only the campaign GM may kick users.")));
+				new command("print failure", "Failed to kick user (database error)")));
 
 		return json_encode(array(
 			new command("print success", "User was kicked.")));
+	}
+
+	public static function change_gm() {
+		global $maindb;
+		global $global_user;
+
+		$cid = trim(get_post_var('campaignId'));
+		$uid = trim(get_post_var('userId'));
+
+		// check for permissions
+		$b_is_gm = campaign_funcs::is_gm($cid);
+		if (!$b_is_gm)
+			return json_encode(array(
+				new command("print failure", "Only the campaign GM may change the GM.")));
+
+		// change the GM user
+		$a_update_vars = array(
+			"gmUser"=>$uid
+		);
+
+		// get the username
+		$a_users = db_query("SELECT * FROM `[maindb]`.`users` WHERE `id`='[id]'",
+		                    array("maindb"=>$maindb, "id"=>$uid));
+		if (!is_array($a_users) || count($a_users) == 0) {
+			return json_encode(array(
+				new command("print failure", "Failed to get user (database error)")));
+		}
+
+		// add the GM to list of users if not already there
+		$a_campaigns = campaign_funcs::get_campaigns($cid);
+		$s_users = $a_campaigns[0]['users'];
+		$s_global_user_id = "|".$global_user->get_id()."|";
+		if (strpos($s_users, $s_global_user_id) === FALSE) {
+			$s_users .= $s_global_user_id;
+			$a_update_vars["users"] = $s_users;
+		}
+
+		// update the database
+		$s_update_clause = array_to_update_clause($a_update_vars);
+		$b_success = db_query("UPDATE `[maindb]`.`campaigns` SET {$s_update_clause} WHERE `id`='[id]'",
+		                      array_merge(array("maindb"=>$maindb, "id"=>$cid), $a_update_vars));
+		if (!$b_success)
+			return json_encode(array(
+				new command("print failure", "Failed to change the GM user (database error)")));
+
+		$s_new_GM_name = $a_users[0]["username"];
+		return json_encode(array(
+			new command("print success", "GM user changed to {$s_new_GM_name}.")));
 	}
 
 	public static function create_character() {

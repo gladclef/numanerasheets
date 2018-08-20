@@ -109,6 +109,37 @@ function draw_modify_campaign_page() {
 			<input type="hidden" name="userId" value="" id="kickId">
 			<label class="errors">&nbsp;</label><br />
 		</form>
+
+		<h2 class="title">Change GM</h2>
+		<div style="margin-bottom: 10px;">
+			This will grant a different player currently in the campaign GM status (ownership status). You will no longer be the GM of the campaign.
+		</div>
+		<?php
+		if (count($a_users) > 0) {
+			foreach ($a_users as $s_uid) {
+				$a_user = db_query("SELECT * FROM `[maindb]`.`users` WHERE `id`='{$s_uid}'",
+				                   array("maindb"=>$maindb));
+				$a_characters = campaign_funcs::get_characters($cid, FALSE, NULL, $a_user[0]['id']);
+				$s_username = htmlspecialchars($a_user[0]['username']);
+				$s_charname = htmlspecialchars($a_characters[0]['name']);
+				?>
+				<div>
+					User "<?php echo $s_username; ?>"
+					(character "<?php echo $s_charname; ?>")
+					<input type="button" value="Bestow GM-ship" onclick="changeGM(<?php echo "'{$s_username}', {$a_user[0]['id']}"; ?>);" />
+				</div>
+				<?php
+			}
+		} else {
+			echo "<div>This campaign does not have any other players, yet. Have the future GM join the campaign in order to grant them ownership.</div>";
+		}
+		?>
+		<form id="change_gm_form">
+			<input type="hidden" name="command" value="change_gm">
+			<input type="hidden" name="campaignId" value="<?php echo $cid; ?>">
+			<input type="hidden" name="userId" value="" id="grantId">
+			<label class="errors">&nbsp;</label><br />
+		</form>
 	</div>
 	<script type="text/javascript">
 		// styleing script
@@ -155,6 +186,12 @@ function draw_modify_campaign_page() {
 			if (confirm('Are you sure you want to kick \"' + username + '\" from this campaign?')) {
 				$('#kickId').val(uid);
 				send_ajax_call_from_form('ajax.php', 'kick_user_form');
+			}
+		}
+		window.changeGM = function(username, uid) {
+			if (confirm('Are you sure you grant all GM-ship to \"' + username + '\"?')) {
+				$('#grantId').val(uid);
+				send_ajax_call_from_form('ajax.php', 'change_gm_form');
 			}
 		}
 	</script>
