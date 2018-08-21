@@ -3,6 +3,7 @@ require_once(dirname(__FILE__)."/../../resources/globals.php");
 require_once(dirname(__FILE__)."/../../resources/common_functions.php");
 my_session_start();
 require_once(dirname(__FILE__)."/../../resources/check_logged_in.php");
+require_once(dirname(__FILE__)."/../../resources/goodWords.php");
 require_once(dirname(__FILE__)."/../../tabs/tabs_functions.php");
 require_once(dirname(__FILE__)."/../login/logout_bar.php");
 require_once(dirname(__FILE__)."/character_funcs.php");
@@ -28,7 +29,6 @@ function draw_character_tabs($a_characters, $b_is_gm, $cid) {
 
 	ob_start();
 	?>
-	<h3 style="display: table">Welcome, Game Master!</h3>
 	<div class="character_tabs">
 		<?php
 
@@ -107,8 +107,13 @@ function draw_floater($a_groups) {
 function draw_campaign_page() {
 	global $global_user;
 	global $maindb;
+	global $goodWords;
 
 	$cid = intval(trim(get_get_var("id")));
+	$a_campaign = db_query("SELECT * FROM `[maindb]`.`campaigns` WHERE `id`='[cid]'",
+	                       array("maindb"=>$maindb, "cid"=>$cid));
+	$a_gm_user = db_query("SELECT * FROM `[maindb]`.`users` WHERE `id`='[gmUser]'",
+	                      array("maindb"=>$maindb, "gmUser"=>$a_campaign[0]["gmUser"]));
 	$b_is_gm = campaign_funcs::is_gm($cid);
 	$s_campaign_name = htmlspecialchars(campaign_funcs::get_name($cid));
 	$s_campaign_link = ($b_is_gm) ? "<a href=\"modify_campaign.php?id={$cid}\">{$s_campaign_name}</a>" : $s_campaign_name;
@@ -129,12 +134,19 @@ function draw_campaign_page() {
 	<div style="width: 1000px">
 		<h1 style="display: table"><?php echo $s_campaign_link; ?></h1>
 		<?php
+		if ($b_is_gm) {
+			echo "<h3 style='display: table'>Welcome, Game Master!</h3>\n";
+		} else {
+			$s_gm_name = $a_gm_user[0]['username'];
+			$s_good_word = $goodWords[rand(0,count($goodWords)-1)];
+			echo "<h3 style='display: table'>GM'd by the {$s_good_word} {$s_gm_name}</h3>\n";
+		}
 
 		if (!is_array($a_characters)) {
 			echo "Database error";
 			return;
 		}
-		if ($b_is_gm)
+		if ($b_is_gm || count($a_characters) > 0)
 			echo draw_character_tabs($a_characters, $b_is_gm, $cid);
 
 		?>

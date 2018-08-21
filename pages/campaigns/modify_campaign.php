@@ -171,7 +171,7 @@ function draw_change_gm() {
 
 	ob_start();
 	?>
-	<h2 class="title">Change GM</h2>
+	<h2 class="title">Transfer GM</h2>
 	<div style="margin-bottom: 10px;">
 		This will grant a different player currently in the campaign GM status (ownership status). You will no longer be the GM of the campaign.
 	</div>
@@ -228,11 +228,17 @@ function draw_character_access() {
 	}
 	$s_campaign_name = htmlspecialchars(campaign_funcs::get_name($cid));
 	$a_characters = campaign_funcs::get_characters($cid, $b_is_gm);
+	if (count($a_characters) == 0) {
+		return "There are no characters for the campaign.";
+	}
 	$a_campaigns = campaign_funcs::get_campaigns($cid);
-	$a_user_ids = explodeIds(str_replace("|{$uid}|", "", $a_campaigns[0]['users']));
+	$a_user_ids = explodeIds($a_campaigns[0]['users']);
 	$s_user_ids = "'" . implode("', '", $a_user_ids) . "'";
 	$a_users = db_query("SELECT * FROM `[maindb]`.`users` WHERE `id` IN ({$s_user_ids})",
 	                    array("maindb"=>$maindb));
+	if (count($a_characters) == 0) {
+		echo "<div>This campaign does not have any other players, yet.</div>";
+	}
 
 	ob_start();
 	?>
@@ -240,48 +246,79 @@ function draw_character_access() {
 	<div style="margin-bottom: 10px;">
 		Change which characters each user has access to.
 	</div>
-	<table>
+	<table id="characterAccesses">
 		<tr>
-			<td>Users &#x2192;<br />Characters &#x2193;</td>
+			<th>Characters &#x2192;<br />Users &#x2193;</th>
 			<?php
-			if (count($a_users) > 0) {
-				foreach ($a_users as $a_user) {
-					$s_username = htmlspecialchars($a_user['username']);
-					echo "<td>{$s_username}</td>";
-				}
-			} else {
-				echo "<div>This campaign does not have any other players, yet.</div>";
+			foreach ($a_characters as $a_character) {
+				$s_charname = htmlspecialchars($a_character['name']);
+				$s_charId = $a_character['id'];
+				echo "<th charId='{$s_charId}'>{$s_charname}</th>";
 			}
 			?>
 		</tr>
 		<?php
-		foreach ($a_characters as $a_character) {
+		foreach ($a_users as $a_user) {
+			$s_username = htmlspecialchars($a_user['username']);
+			$s_uid = $a_user['id'];
+
 			echo "<tr>";
-			$s_charname = htmlspecialchars($a_character['name']);
-			echo "<td>{$s_charname}</td>";
-			foreach ($a_users as $a_user) {
-				$b_has_character = db_query("SELECT * FROM `[maindb]`.`characters` WHERE INSTR(`users`,'[uid]') AND `id`='[charId]'",
-				                            array("maindb"=>$maindb, "uid"=>$a_user['id'], "charId"=>$a_character['id']));
+			echo "<td>{$s_username}</td>";
+			foreach ($a_characters as $a_character) {
+				$b_has_character = strpos($a_character['users'], "|{$s_uid}|") !== FALSE;
 				$s_checked = $b_has_character ? "checked" : "";
-				echo "<td><input type='checkbox' {$s_checked}/></td>";
+				$s_charId = $a_character['id'];
+				echo "<td><input type='checkbox' uid='{$s_uid}' charId='{$s_charId}' onclick='updateCharacterAccesses(this);' {$s_checked}/></td>";
 			}
-			echo "</tr>\n";
+			echo "\n</tr>\n";
 		}
 		?>
 	</table>
 	<form id="modify_user_access_form">
-		<!--<input type="hidden" name="command" value="change_gm">
+		<input type="hidden" name="command" value="update_user_accesses">
+		<input type="hidden" name="charId" value="">
+		<input type="hidden" name="userIds" value="">
 		<input type="hidden" name="campaignId" value="<?php echo $cid; ?>">
-		<input type="hidden" name="userId" value="" id="grantId">
-		<label class="errors">&nbsp;</label><br />-->
+		<label class="errors">&nbsp;</label><br />
 	</form>
 	<script type="text/javascript">
-		/*window.changeGM = function(username, uid) {
-			if (confirm('Are you sure you want to grant all GM-ship to \"' + username + '\"?')) {
-				$('#grantId').val(uid);
-				send_ajax_call_from_form('ajax.php', 'change_gm_form');
+		window.syncCharacterAccesses = function() {
+			var jrows = $(".syncAccess");
+			var jform = $("#modify_user_access_form");
+			var jcharId = jform.find("[name=charId]");
+			var juserIds = jform.find("[name=userIds]");
+			var syncRowFunc = function(k, v) {
+				var jcol = $(v);
+				jcol.removeClass("syncAccess");
+				jcharId.val(jcol.attr("charId"));
+				juserIds.val(jcol.attr("userIds"));
+				send_ajax_call_from_form("ajax.php", "modify_user_access_form", true);
 			}
-		}*/
+			$.each(jrows, syncRowFunc);
+		}
+		window.updateCharacterAccesses = function(inputVal) {
+			// get the users of the character's column
+			var jinput = $(inputVal);
+			var charId = jinput.attr("charId");
+			var jinputs = $("#characterAccesses").find("input[charId=" + charId + "]");
+
+			// get a string of the selected characters
+			var userIdsStr = "";
+			var addCharacter = function(k, v) {
+				var jv = $(v);
+				if (jv.is(":checked")) {
+					userIdsStr += "|" + jv.attr("uid") + "|";
+				}
+			}
+			$.each(jinputs, addCharacter);
+
+			// sync the new value
+			var jtable = get_parent_by_tag("table", jinput);
+			var jcol = jtable.find("th[charId=" + charId + "]");
+			jcol.attr("userIds", userIdsStr);
+			jcol.target = jcol;
+			setUpdateTimeout(jcol, "syncAccess", "syncAccess", syncCharacterAccesses);
+		}
 	</script>
 	<?php
 	$s_page = ob_get_contents();

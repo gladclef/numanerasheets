@@ -193,3 +193,20 @@ function reload_classes() {
 	o_courses.setSemester(sem);
 	draw_tab(get_name_of_focused_tab());
 }
+
+function setUpdateTimeout(e, timeoutName, className, updateFunc) {
+	if (window[timeoutName] != undefined)
+		clearTimeout(window[timeoutName]);
+	$(e.target).addClass(className);
+	var isBasicTitleSet = ($.type(window.basicTitle) === "string");
+	if (isBasicTitleSet) {
+		if (document.title == window.basicTitle)
+			document.title = "*" + window.basicTitle;
+	}
+	window[timeoutName] = setTimeout(function() {
+		if (isBasicTitleSet) {
+			document.title = window.basicTitle;
+		}
+		updateFunc();
+	}, 1000);
+};

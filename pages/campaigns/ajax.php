@@ -222,6 +222,31 @@ class user_ajax {
 			new command("print success", "GM user changed to {$s_new_GM_name}.")));
 	}
 
+	public static function update_user_accesses() {
+		global $maindb;
+		global $global_user;
+
+		$cid = trim(get_post_var('campaignId'));
+		$uids = trim(get_post_var('userIds'));
+		$charId = trim(get_post_var('charId'));
+
+		// check for permissions
+		$b_is_gm = campaign_funcs::is_gm($cid);
+		if (!$b_is_gm)
+			return json_encode(array(
+				new command("print failure", "Only the campaign GM may change user accesses.")));
+
+		// update the database
+		$b_success = db_query("UPDATE `[maindb]`.`characters` SET `users`='[uids]' WHERE `id`='[charId]'",
+		                      array("maindb"=>$maindb, "charId"=>$charId, "uids"=>$uids));
+		if (!$b_success)
+			return json_encode(array(
+				new command("print failure", "Failed to update user accesses (database error)")));
+
+		return json_encode(array(
+			new command("print success", "User accesses updated")));
+	}
+
 	public static function create_character() {
 		global $global_user;
 

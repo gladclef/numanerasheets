@@ -1073,14 +1073,6 @@ class character_funcs {
 				var updateCheckCircleTimeoutFunc = function() {
 					updateTimeoutFunc("updateCircleWaiting");
 				};
-				var setUpdateTimeout = function(e, timeoutName, className, updateFunc) {
-					if (window[timeoutName] != undefined)
-						clearTimeout(window[timeoutName]);
-					$(e.target).addClass(className);
-					if (document.title == window.basicTitle)
-						document.title = "*" + window.basicTitle;
-					window[timeoutName] = setTimeout(updateFunc, 1000);
-				};
 				var setUpdateInput = function(e) {
 					setUpdateTimeout(e, "updateInputTimeout", "updateInputWaiting", updateInputTimeoutFunc);
 				};

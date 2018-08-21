@@ -168,7 +168,10 @@ function retval_to_commands(retval) {
 	var commands_array = [];
 	for (var i = 0; i < commands_list.length; i++) {
 		var command = commands_list[i];
-		commands_array.push([command.command, command.action]);
+		if ($.type(command) == "object")
+			commands_array.push([command.command, command.action]);
+		else if ($.type(command) == "string")
+			commands_array.push(["print failure", command]);
 	}
 	return commands_array;
 }
