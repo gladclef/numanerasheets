@@ -200,6 +200,65 @@ function create_row_if_not_existing($a_vars, $b_print_queries = FALSE) {
 	return FALSE;
 }
 
+// Copies the row in s_tablename as specified by the a_where_vars.
+// Increments the a_inc_columns to the current greatest value + 1.
+// Returns the new row id as an integer on success, or a string on failure.
+function db_copy_row($s_tablename, $a_where_vars, $a_inc_columns) {
+	global $maindb;
+
+	// get the existing row
+	$s_where_clause = array_to_where_clause($a_where_vars);
+	$a_rows = db_query("SELECT * FROM `[maindb]`.`[table]` WHERE {$s_where_clause}",
+	                   array_merge(array("maindb"=>$maindb, "table"=>$s_tablename), $a_where_vars));
+	if (!is_array($a_rows) || count($a_rows) == 0) {
+		return "Could not find any rows in \"{$s_tablename}\" table";
+	}
+	if (count($a_rows) > 1) {
+		return "Could not duplicate row in \"{$s_tablename}\" table. Expected 1 original row, found " . count($a_rows) . ".";
+	}
+	foreach ($a_inc_columns as $s_inc_column) {
+		if (!array_key_exists($s_inc_column, $a_rows[0])) {
+			return "Could not duplicate row in \"{$s_tablename}\" table. Expected to increment \"{$s_inc_column}\" column but no such column exists.";
+		}
+	}
+	$a_row = $a_rows[0];
+
+	// increment all a_inc_columns
+	foreach ($a_inc_columns as $s_inc_column) {
+		$a_largest_rows = db_query("SELECT `[incColumn]` FROM `[maindb]`.`[table]` ORDER BY `[incColumn]` DESC LIMIT 1",
+		                          array("maindb"=>$maindb, "table"=>$s_tablename, "incColumn"=>$s_inc_column));
+		if (!is_array($a_largest_rows) || count($a_largest_rows) == 0) {
+			return "Could not duplicate row in \"{$s_tablename}\" table. Expected to increment \"{$s_inc_column}\" column but could not find any rows with that column.";
+		}
+		$i_largest_val = intval($a_largest_rows[0][$s_inc_column]);
+		$a_row[$s_inc_column] = $i_largest_val + 1;
+	}
+
+	// create the new row
+	$s_insert_clause = array_to_insert_clause($a_row);
+	$b_success = db_query("INSERT INTO `[maindb]`.`[table]` {$s_insert_clause}",
+	                      array_merge(array("maindb"=>$maindb, "table"=>$s_tablename), $a_row));
+	if (!$b_success) {
+		return "Database error during insert of copied row into \"{$s_tablename}\" table";
+	}
+
+	// get the id of the newly generated character
+	$a_row_ids = db_query("SELECT LAST_INSERT_ID() AS id");
+	if (is_array($a_row_ids) && count($a_row_ids) > 0) {
+		$i_newRowId = intval($a_row_ids[0]['id']);
+	}
+	if ($i_newRowId == 0) {
+		$a_row_ids = db_query("SELECT `id` FROM `[maindb]`.`[table]` ORDER BY `id` DESC LIMIT 1",
+		                       array("maindb"=>$maindb, "table"=>$s_tablename));
+		if (!is_array($a_row_ids) || count($a_row_ids) == 0) {
+			return "Database error retrieving newly created row in \"{$s_tablename}\" table";
+		}
+		$i_newRowId = intval($a_row_ids[0]['id']);
+	}
+
+	return $i_newRowId;
+}
+
 function getTableNames() {
 	global $maindb;
 	$a_tables = db_query("SHOW TABLES IN `[maindb]`", array("maindb"=>$maindb));

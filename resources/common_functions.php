@@ -226,6 +226,13 @@ function explodeIds($s_ids) {
 	return str_replace("|", "", $a_ids);
 }
 
+function implodeIds($a_ids) {
+	if (!is_array($a_ids) || count($a_ids) == 0) {
+		return "";
+	}
+	return "|" . join("||", $a_ids) . "|";
+}
+
 function escapeTextVals($a_vals, $a_keys) {
 	$a_vals_obj = new ArrayObject($a_vals);
 	$a_vals2 = $a_vals_obj->getArrayCopy();

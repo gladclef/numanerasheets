@@ -236,7 +236,7 @@ function draw_character_access() {
 	$s_user_ids = "'" . implode("', '", $a_user_ids) . "'";
 	$a_users = db_query("SELECT * FROM `[maindb]`.`users` WHERE `id` IN ({$s_user_ids})",
 	                    array("maindb"=>$maindb));
-	if (count($a_characters) == 0) {
+	if (count($a_users) == 0) {
 		echo "<div>This campaign does not have any other players, yet.</div>";
 	}
 
@@ -327,6 +327,73 @@ function draw_character_access() {
 	return $s_page;
 }
 
+function draw_copy_characters() {
+	global $global_user;
+	global $maindb;
+
+	$cid = intval(trim(get_get_var("id")));
+	$uid = $global_user->get_id();
+	$b_is_gm = campaign_funcs::is_gm($cid);
+	if (!$b_is_gm) {
+		return "Only the campaign GM can copy characters.";
+	}
+	$a_characters = campaign_funcs::get_characters($cid, $b_is_gm);
+	if (count($a_characters) == 0) {
+		return "There are no characters for the campaign.";
+	}
+
+	ob_start();
+	?>
+	<h2 class="title">Copy Characters to Another Campaign</h2>
+	<div style="margin-bottom: 10px;">
+		Copies a character and all their attributes (skills, equipment, etc) to another campaign.
+	</div>
+	<div id="copy_to_campaign_form" style="display: hidden; position: fixed; margin: 0 auto; padding: 20px; background-color: white; border: 1px solid black; border-radius: 10px; box-shadow: 0px 0px 10px 5px #ccc;">
+		<input type="hidden" name="command" value="copy_character">
+		<input type="hidden" name="character_id" value="">
+		<input type="hidden" name="campaign_id" value="<?php echo $cid; ?>">
+		<label>The exact name of the campaign to copy to:</label><br />
+		<input type="textarea" size="30" name="campaign_name" placeholder="Eg: The Great Divide" /><br />
+		<input id="search_submit" type="button" onclick="send_ajax_call_from_form('ajax.php','copy_to_campaign_form');" value="Copy" />
+		<input type="button" onclick="$('#copy_to_campaign_form').hide()" value="Cancel" /><br />
+		<label class="errors"></label>
+	</div>
+	<div>
+		<?php
+		foreach ($a_characters as $a_character) {
+			$s_charname = $a_character['name'];
+			$i_charId = intval($a_character['id']);
+			echo "{$s_charname} <input type='button' charId='{$i_charId}' onclick='open_copy_character_form(this);' value='copy' /><br />\n";
+		}
+		?>
+	</div>
+	<script type="text/javascript">
+		window.open_copy_character_form = function(button) {
+			var jbutton = $(button);
+			var jform = $("#copy_to_campaign_form");
+			var jcharId = jform.find("input[name=character_id]");
+			var charId = jbutton.attr("charId");
+			jcharId.val(charId);
+			jform.show();
+			setTimeout(function() {
+				winWidth = parseInt($(window).width());
+				formWidth = jform.width();
+				winHeight = parseInt($(window).height());
+				formHeight = jform.height();
+				jform.css({
+					left: ((winWidth / 2 - formWidth / 2) + "px"),
+					top: ((winHeight / 2 - formHeight / 2) + "px")
+				});
+			}, 0);
+		}
+	</script>
+	<?php
+	$s_page = ob_get_contents();
+	ob_end_clean();
+
+	return $s_page;
+}
+
 function draw_modify_campaign_page() {
 	global $global_user;
 	global $maindb;
@@ -358,6 +425,7 @@ function draw_modify_campaign_page() {
 		echo draw_kick_players();
 		echo draw_change_gm();
 		echo draw_character_access();
+		echo draw_copy_characters();
 		?>
 		
 	</div>

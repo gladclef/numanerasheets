@@ -523,6 +523,83 @@ class user_ajax {
 		// draw the character
 		return character_funcs::draw_character($a_characters[0]);
 	}
+
+	public static function copy_character() {
+		global $global_user;
+		global $maindb;
+		global $fqdn;
+
+		$cid = intval(trim(get_post_var("campaign_id")));
+		$charid = intval(trim(get_post_var("character_id")));
+		$s_new_campaign_name = get_post_var("campaign_name");
+		$b_is_gm = campaign_funcs::is_gm($cid);
+
+		// check for user access
+		if (!$b_is_gm) {
+			return json_encode(array(
+				new command("print failure", "Only the GM may copy a character to another campaign!")));
+		}
+		$sb_result = user_ajax::user_has_access($cid, $charid);
+		if ($sb_result !== TRUE)
+			return $sb_result;
+
+		// get the character, users, and campaign
+		$a_characters = campaign_funcs::get_characters($cid, $b_is_gm, $charid);
+		if (!is_array($a_characters) || count($a_characters) == 0) {
+			return json_encode(array(
+				new command("print failure", "Unknown character \"{$charid}\"")));
+		}
+		$a_character = $a_characters[0];
+		$a_char_users = explodeIds($a_character['users']);
+		$a_char_users = (is_array($a_char_users)) ? $a_char_users : array();
+		$a_users = db_query("SELECT `users`,`id` FROM `[maindb]`.`campaigns` WHERE `name`='[name]'",
+		                    array("maindb"=>$maindb, "name"=>$s_new_campaign_name));
+		if (!is_array($a_users) || count($a_users) == 0)
+			return json_encode(array(
+				new command("print failure", "Unknown campaign \"{$s_new_campaign_name}\"")));
+		if (count($a_users) != 1)
+			return json_encode(array(
+				new command("print failure", "Error! There are two or more campaigns with the name \"{$s_new_campaign_name}\"")));
+		$new_cid = intval($a_users[0]['id']);
+		$a_users = explodeIds($a_users[0]['users']);
+		if (!is_array($a_users)) {
+			return json_encode(array(
+				new command("print failure", "Add all users of this character as users of the other campaign, first.")));
+		}
+
+		// check for users/campaign access
+		foreach ($a_char_users as $s_char_user) {
+			$b_found = FALSE;
+			foreach ($a_users as $s_user) {
+				if (intval($s_char_user) == intval($s_user)) {
+					$b_found = TRUE;
+					break;
+				}
+			}
+			if (!$b_found) {
+				return json_encode(array(
+					new command("print failure", "All users with access to this character do not have access to the other campaign.")));
+			}
+		}
+
+		// copy the character
+		$i_new_charId = character_funcs::copy_to_campaign($a_character['id'], $new_cid, FALSE);
+		if (is_string($i_new_charId)) {
+			return json_encode(array(
+				new command("print failure", $i_new_charId)));
+		}
+
+		// update the campaign and users
+		db_query("UPDATE `[maindb]`.`campaigns` SET `characters`=CONCAT(`characters`,'|[charId]|') WHERE `id`='[cid]'",
+		         array("maindb"=>$maindb, "charId"=>$i_new_charId, "cid"=>$new_cid));
+		foreach ($a_char_users as $s_user) {
+			db_query("UPDATE `[maindb]`.`users` SET `characters`=CONCAT(`characters`,'|[charId]|') WHERE `id`='[uid]'",
+			         array("maindb"=>$maindb, "charId"=>$i_new_charId, "uid"=>$s_user), TRUE);
+		}
+
+		return json_encode(array(
+			new command("print success", "Copied character! <a href='https://{$fqdn}/pages/campaigns/campaign.php?id={$new_cid}'>See it in the other campaign!</a>")));
+	}
 }
 
 if (!$global_user) {

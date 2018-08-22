@@ -1254,6 +1254,65 @@ class character_funcs {
 		return TRUE;
 	}
 
+	/** @return The new character id on success (int), or a string message on failure. */
+	public static function copy_to_campaign($charId, $new_cid, $b_enable_same_campaign) {
+		global $maindb;
+		$new_cid = intval($new_cid);
+
+		// check that character exists and that the campaign is different
+		$a_characters = db_query("SELECT * FROM `[maindb]`.`characters` WHERE `id`='[charId]'",
+		                         array("maindb"=>$maindb, "charId"=>$charId));
+		if (!is_array($a_characters) || count($a_characters) == 0) {
+			return "Failed to copy character. Could not find character.";
+		}
+		$a_character = $a_characters[0];
+		$old_cid = intval($a_character['campaign']);
+		if ($new_cid == $old_cid && !$b_enable_same_campaign) {
+			return "Cannot copy character to the same campaign.";
+		}
+
+		// copy the character
+		$i_new_charId = db_copy_row("characters", array("id"=>intval($charId)), array("id"));
+		if (is_string($i_new_charId))
+			return $i_new_charId;
+		db_query("UPDATE `[maindb]`.`characters` SET `campaign`='[cid]' WHERE `id`='[charId]'",
+		         array("maindb"=>$maindb, "cid"=>$new_cid, "charId"=>$i_new_charId));
+
+		// copy all the associated things of the character
+		if ($old_cid != $new_cid) {
+			$a_tables = array("abilities", "armor", "artifacts", "attacks", "cyphers", "equipment", "inabilities", "oddities", "places", "skills");
+			foreach ($a_tables as $s_tablename) {
+				// get the ids and check that there are any
+				$a_ids = explodeIds($a_character[$s_tablename]);
+				if (!is_array($a_ids) || count($a_ids) == 0)
+					continue;
+				
+				// copy the values and make an array of their new ids
+				$a_new_ids = array();
+				foreach ($a_ids as $s_id) {
+					// copy
+					$i_new_id = db_copy_row($s_tablename, array("id"=>intval($s_id)), array("id"));
+					if (is_string($i_new_id))
+						continue;
+					// update campaign id
+					$b_success = db_query("UPDATE `[maindb]`.`[table]` SET `campaign`='[cid]' WHERE `id`='[id]'",
+					                      array("maindb"=>$maindb, "table"=>$s_tablename, "cid"=>$new_cid, "id"=>$i_new_id));
+					if (!$b_success)
+						continue;
+					// add id to new ids list
+					$a_new_ids[] = $i_new_id;
+				}
+
+				// set the associated rows ids for the copied character
+				$s_newIds = implodeIds($a_new_ids);
+				db_query("UPDATE `[maindb]`.`characters` SET `[table]`='[newIds]' WHERE `id`='[charId]'",
+				         array("maindb"=>$maindb, "table"=>$s_tablename, "newIds"=>$s_newIds, "charId"=>$i_new_charId));
+			}
+		}
+
+		return $i_new_charId;
+	}
+
 	public static function check_create_character($cid) {
 		global $global_user;
 
