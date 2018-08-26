@@ -25,5 +25,5 @@ function check_session_expired() {
 	});
 	window.isRecentActivity = false;
 	interpret_common_ajax_commands(retval_to_commands(send_ajax_call_retval));
-	setTimeout('check_session_expired();', 10000);
+	setTimeout('check_session_expired();', 60000);
 }

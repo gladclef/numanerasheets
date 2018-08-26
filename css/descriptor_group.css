@@ -175,7 +175,7 @@
 	border: 1px solid lightgray;
 }
 
-.descriptor_group .closeButton {
+.descriptor_group .endButton {
 	width: 27px;
 	height: 27px;
 	display: inline-block;
@@ -183,12 +183,25 @@
 	border-radius: 4px;
 	text-align: center;
 	cursor: pointer;
-	background-color: white;
 	float: right;
 	margin: 2px;
 	font-size: 22px;
 }
-.descriptor_group .closeButton.small {
+.descriptor_group .endButton.closeButton {
+	background-color: white;
+}
+.descriptor_group .endButton.shareButton {
+	background-color: white;
+	background-image: url('/images/share.png');
+	background-size: 24px;
+	background-position-x: 2px;
+	background-repeat: no-repeat;
+}
+.descriptor_group .endButton:hover {
+	background-color: #CCF;
+	border-color: blue;
+}
+.descriptor_group .endButton.small {
 	width: 20px;
 	height: 20px;
 	font-size: 16px;

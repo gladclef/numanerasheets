@@ -57,10 +57,6 @@ function draw_character_tabs($a_characters, $b_is_gm, $cid) {
 			var jtab = $("div.tab[charid=" + charid + "]");
 			var jsheetContainer = $("#sheet_container");
 
-			// check that we actually need an update
-			if (parseInt(jtabCurr.attr("charid")) == parseInt(charid))
-				return;
-
 			// update the sheet
 			var sheet = send_ajax_call("ajax.php", {
 				"command": "draw_character",
@@ -121,6 +117,58 @@ function draw_floater($a_groups) {
 	return $s_page;
 }
 
+function draw_share_form($a_campaigns) {
+	global $maindb;
+
+	$cid = intval($a_campaigns[0]['id']);
+	$a_characterIds = explodeIds($a_campaigns[0]['characters']);
+	$s_characterIds = join(",", $a_characterIds);
+	$a_characters = db_query("SELECT `id`,`name` FROM `[maindb]`.`characters` WHERE `id` IN ({$s_characterIds})",
+	                         array("maindb"=>$maindb));
+
+	ob_start();
+	?>
+
+	<div id="share_with_character_form" style="display: hidden; position: fixed; margin: 0 auto; padding: 20px; background-color: white; border: 1px solid black; border-radius: 10px; box-shadow: 0px 0px 10px 5px rgba(0,0,0,0.3);">
+		<input type="hidden" name="command" value="share_with_character">
+		<input type="hidden" name="campaign_id" value="<?php echo $cid; ?>">
+		<input type="hidden" name="character_id" value="">
+		<input type="hidden" name="rowid" value="">
+		<input type="hidden" name="table" value="">
+		<input type="hidden" name="description" value="">
+		<label>
+			Which character do you want to
+			<select name="action">
+				<option value="give">give</option>
+				<option value="copy">copy</option>
+				<option value="share">share</option>
+			</select>
+			this
+			<span class='description'></span> "<span class='name'></span>"
+			to?
+		</label><br />
+		<select name="other_character_id" style="margin: 5px 0;">
+			<?php
+			foreach ($a_characters as $a_character) {
+				$i_char_id = intval($a_character['id']);
+				$s_char_name = $a_character['name'];
+				$s_sanitized = htmlspecialchars($s_char_name);
+				echo "<option value=\"{$i_char_id}\">{$s_sanitized}</option>\n";
+			}
+			?>
+		</select><br />
+		<input id="share_submit" type="button" onclick="send_ajax_call_from_form('ajax.php','share_with_character_form');" value="Submit" />
+		<input type="button" onclick="$('#share_with_character_form').hide()" value="Cancel" /><br />
+		<label class="errors"></label>
+	</div>
+
+	<?php
+	$s_page = ob_get_contents();
+	ob_end_clean();
+
+	return $s_page;
+}
+
 function draw_campaign_page() {
 	global $global_user;
 	global $maindb;
@@ -144,7 +192,6 @@ function draw_campaign_page() {
 
 	if (count($a_characters) > 0) {
 		$a_group_order = explode(",", $a_characters[0]['drawOrder']);
-		echo draw_floater($a_group_order);
 		$charid = $a_characters[0]['id'];
 	}
 	?>
@@ -295,6 +342,8 @@ function draw_campaign_page() {
 	<?php
 	$s_page = ob_get_contents();
 	ob_end_clean();
+	$s_page .= draw_floater($a_group_order);
+	$s_page .= draw_share_form($a_campaign);
 
 	$s_access = "".date("Y-m-d H:i:s");
 	db_query("UPDATE `[maindb]`.`campaigns` SET `access`='[now]' WHERE `id`='[cid]'",

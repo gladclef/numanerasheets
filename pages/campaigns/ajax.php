@@ -643,6 +643,102 @@ class user_ajax {
 		return json_encode(array(
 			new command("print success", "Character updated!")));
 	}
+
+	public static function share_with_character() {
+		global $global_user;
+		global $maindb;
+
+		$uid = $global_user->get_id();
+		$cid = intval(trim(get_post_var("campaign_id")));
+		$charid = intval(trim(get_post_var("character_id")));
+		$rowid = intval(get_post_var("rowid"));
+		$ocharid = intval(get_post_var("other_character_id"));
+		$s_table = get_post_var("table");
+		$s_description = get_post_var("description");
+		$s_action = get_post_var("action");
+
+		$o_hideCommand = new command("run script", 'setTimeout(function() { $("#share_with_character_form").hide(); }, 3000);');
+		$o_reloadCommand = new command("run script", 'setTimeout(function() { draw_character('.$charid.'); }, 3000);');
+		$o_printSuccessCommand = new command("print success", "Item action \"{$s_action}\" succeeded!");
+
+		// check for user access
+		if (!campaign_funcs::user_in_campaign($cid, $uid)) {
+			return json_encode(array(
+				new command("print failure", "You must be a part of the campaign to share items!")));
+		}
+		$b_is_gm = campaign_funcs::is_gm($cid);
+		$a_characters = campaign_funcs::get_characters($cid, $b_is_gm, $charid, $uid);
+		$s_charName = (is_array($a_characters) && count($a_characters) > 0) ? $a_characters[0]['name'] : "unknown";
+		$a_rows = db_query("SELECT `id` FROM `[maindb]`.`characters` WHERE `id`='[charid]' AND INSTR(`[table]`,'|[rowid]|')",
+		                   array("maindb"=>$maindb, "charid"=>$charid, "table"=>$s_table, "rowid"=>$rowid));
+		if (!is_array($a_rows) || count($a_rows) == 0) {
+			return json_encode(array(
+				new command("print failure", "The character \"{$s_charName}\" must have that \"{$s_description}\" in order to share it!")));
+		}
+
+		// check the action string
+		if ($s_action != "give" && $s_action != "copy" && $s_action != "share") {
+			return json_encode(array(
+				new command("print failure", "Uknown action \"{$s_action}\" to take with this {$s_description}!")));
+		}
+		if ($charid == $ocharid && $s_action != "copy") {
+			return json_encode(array(
+				new command("print failure", "Cannot \"{$s_action}\" this item to the same character! (only \"copy\" is valid for the same character)")));
+		}
+
+		// share the item
+		if ($s_action == "share" || $s_action == "give") {
+			$b_success = db_query("UPDATE `[maindb]`.`characters` SET `[table]`=CONCAT(`[table]`,'|[rowid]|') WHERE `id`='[ocharid]'",
+			                      array("maindb"=>$maindb, "table"=>$s_table, "rowid"=>$rowid, "ocharid"=>$ocharid));
+			if (!$b_success) {
+				return json_encode(array(
+					new command("print failure", "Database error. Failed to \"{$s_action}\" this item!")));
+			}
+		}
+
+		// give the item
+		if ($s_action == "give") {
+			$b_success = db_query("UPDATE `[maindb]`.`characters` SET `[table]`=REPLACE(`[table]`,'|[rowid]|','') WHERE `id`='[charid]'",
+			                      array("maindb"=>$maindb, "table"=>$s_table, "rowid"=>$rowid, "charid"=>$charid));
+			if (!$b_success) {
+				return json_encode(array(
+					new command("print failure", "Database error. Failed to \"{$s_action}\" this item (shared it instead)!")));
+			}
+			// success!
+			return json_encode(array(
+				$o_hideCommand,
+				$o_reloadCommand,
+				$o_printSuccessCommand));
+		}
+
+		// copy the item
+		if ($s_action == "copy") {
+			// copy the row
+			$a_where_vars = array(
+				"id"=>$rowid
+			);
+			$a_inc_columns = array(
+				"id"
+			);
+			$i_new_rowid = db_copy_row($s_table, $a_where_vars, $a_inc_columns);
+			if (is_string($i_new_rowid)) {
+				return json_encode(array(
+					new command("print failure", "Error copying item! ({$i_new_rowid})")));
+			}
+
+			// assign the row
+			$b_success = db_query("UPDATE `[maindb]`.`characters` SET `[table]`=CONCAT(`[table]`,'|[new_rowid]|') WHERE `id`='[ocharid]'",
+			                      array("maindb"=>$maindb, "table"=>$s_table, "new_rowid"=>$i_new_rowid, "ocharid"=>$ocharid));
+			if (!$b_success) {
+				return json_encode(array(
+					new command("print failure", "Database error. Failed to assign copied item to other character!")));
+			}
+		}
+
+		return json_encode(array(
+			$o_hideCommand,
+			$o_printSuccessCommand));
+	}
 }
 
 if (!$global_user) {

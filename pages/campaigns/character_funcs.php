@@ -181,12 +181,14 @@ class character_funcs {
 			'description',
 			'partyUnderstanding'
 		));
+		$s_name = "'".htmlspecialchars($a_cypher2['name'])."'";
 		?>
 		<div style="border-left:1px solid black; padding-left:5px; position:relative;">
 			<span class="collapsibleHeader" collapseid="cyph<?php echo $a_cypher2['id']; ?>">
 				<span class="auto_size">Name: </span>
 				<input class="col2" type="text" name="name" value="<?php echo $a_cypher2['name']; ?>" placeholder="name" table="cyphers" rowid="<?php echo $a_cypher2['id']; ?>">
-				<span class="closeButton" onclick="remove(this, <?php echo $a_cypher2['id']; ?>, 'cyphers', 'Cypher');">X</span>
+				<span class="endButton closeButton" onclick="remove(this, <?php echo $a_cypher2['id']; ?>, 'cyphers', 'Cypher');">X</span>
+				<span class="endButton shareButton" onclick="share(this, <?php echo $a_cypher2['id']; ?>, 'cyphers', 'Cypher', <?php echo $s_name; ?>);"></span>
 			</span>
 			<div class="collapsibleBody">
 
@@ -260,12 +262,14 @@ class character_funcs {
 			'description',
 			'partyUnderstanding'
 		));
+		$s_name = "'".htmlspecialchars($a_artifact2['name'])."'";
 		?>
 		<div style="border-left:1px solid black; padding-left:5px; position:relative;">
 			<span class="collapsibleHeader" collapseid="art<?php echo $a_artifact2['id']; ?>">
 				<span class="auto_size">Name: </span>
 				<input class="col2" type="text" name="name" value="<?php echo $a_artifact2['name'] ?>" placeholder="name" table="artifacts" rowid="<?php echo $a_artifact2['id']; ?>">
-				<span class="closeButton" onclick="remove(this, <?php echo $a_artifact2['id']; ?>, 'artifacts', 'Artifact');">X</span>
+				<span class="endButton closeButton" onclick="remove(this, <?php echo $a_artifact2['id']; ?>, 'artifacts', 'Artifact');">X</span>
+				<span class="endButton shareButton" onclick="share(this, <?php echo $a_artifact2['id']; ?>, 'artifacts', 'Artifact', <?php echo $s_name; ?>);"></span>
 			</span>
 			<div class="collapsibleBody">
 
@@ -334,7 +338,7 @@ class character_funcs {
 			class="auto_size">T:</span><input type="checkbox" name="trained" <?php echo $a_skill2['trained'] ? "checked" : ""; ?> tooltip="trained" table="skills" rowid="<?php echo $a_skill2['id']; ?>"><span
 			class="auto_size">S:</span><input type="checkbox" name="skilled" <?php echo $a_skill2['skilled'] ? "checked" : ""; ?> tooltip="skilled" table="skills" rowid="<?php echo $a_skill2['id']; ?>"><span
 			class="auto_size">I:</span><input type="checkbox" name="inability" <?php echo $a_skill2['inability'] ? "checked" : ""; ?> tooltip="inability" table="skills" rowid="<?php echo $a_skill2['id']; ?>"><span
-			class="closeButton small" onclick="remove(this, <?php echo $a_skill2['id']; ?>, 'skills', 'Skill', true);" style="margin-top:7px;">X</span>
+			class="endButton closeButton small" onclick="remove(this, <?php echo $a_skill2['id']; ?>, 'skills', 'Skill', true);" style="margin-top:7px;">X</span>
 		</div>
 		<?php
 		}
@@ -390,7 +394,7 @@ class character_funcs {
 			<span class="collapsibleHeader" collapseid="abil<?php echo $a_ability2['id']; ?>">
 				<span class="auto_size">Name: </span>
 				<input class="col2" type="text" name="name" value="<?php echo $a_ability2['name']; ?>" placeholder="name" table="abilities" rowid="<?php echo $a_ability2['id']; ?>">
-				<span class="closeButton" onclick="remove(this, <?php echo $a_ability2['id']; ?>, 'abilities', 'Ability');">X</span>
+				<span class="endButton closeButton" onclick="remove(this, <?php echo $a_ability2['id']; ?>, 'abilities', 'Ability');">X</span>
 			</span>
 			<div class="collapsibleBody">
 
@@ -455,7 +459,7 @@ class character_funcs {
 			<span class="collapsibleHeader" collapseid="abil<?php echo $a_inability2['id']; ?>">
 				<span class="auto_size">Name: </span>
 				<input class="col2" type="text" name="name" value="<?php echo $a_inability2['name']; ?>" placeholder="name" table="inabilities" rowid="<?php echo $a_inability2['id']; ?>">
-				<span class="closeButton" onclick="remove(this, <?php echo $a_inability2['id']; ?>, 'inabilities', 'Inability');">X</span>
+				<span class="endButton closeButton" onclick="remove(this, <?php echo $a_inability2['id']; ?>, 'inabilities', 'Inability');">X</span>
 			</span>
 			<div class="collapsibleBody">
 				<div><span>Description</span></div>
@@ -508,11 +512,13 @@ class character_funcs {
 			'description'
 		));
 		$s_height = max(floor(strlen($a_equipment2['description']) / 40), 1) * 16;
+		$s_name = "'".htmlspecialchars($a_equipment2['name'])."'";
 		?>
 		<div class="mediumText"><span
 			class="auto_size">Name: </span><input class="col3" type="text" name="name" value="<?php echo $a_equipment2['name']; ?>" placeholder="equipment" table="equipment" rowid="<?php echo $a_equipment2['id']; ?>"><span
 			class="auto_size">Description: </span><textarea class="fill smallTextarea" style="height:<?php echo $s_height; ?>px;" name="description" placeholder="description" table="equipment" rowid="<?php echo $a_equipment2['id']; ?>"><?php echo $a_equipment2['description']; ?></textarea><span
-			class="closeButton small" onclick="remove(this, <?php echo $a_equipment2['id']; ?>, 'equipment', 'Equipment', true);" style="margin-top:7px;">X</span>
+			class="endButton closeButton small" onclick="remove(this, <?php echo $a_equipment2['id']; ?>, 'equipment', 'Equipment', true);" style="margin-top:7px;">X</span><span
+			class="endButton shareButton small" onclick="share(this, <?php echo $a_equipment2['id']; ?>, 'equipment', 'Equipment', <?php echo $s_name; ?>);"></span>
 		</div>
 		<?php
 		}
@@ -566,7 +572,7 @@ class character_funcs {
 		<div style="border-left:1px solid black; margin-bottom:15px; padding-left:5px;">
 			<span class="col2 mediumText"><span
 				class="auto_size">Name: </span><input class="fill" type="text" name="name" value="<?php echo $a_attack2['name']; ?>" placeholder="name" table="attacks" rowid="<?php echo $a_attack2['id']; ?>"><span
-				class="closeButton small" onclick="remove(this, <?php echo $a_attack2['id']; ?>, 'attacks', 'Attack', true);" style="margin-top:7px;">X</span>
+				class="endButton closeButton small" onclick="remove(this, <?php echo $a_attack2['id']; ?>, 'attacks', 'Attack', true);" style="margin-top:7px;">X</span>
 			</span>
 			<div class="mediumText"><span
 				class="auto_size">Damage: </span><input class="col6" type="text" name="damage" value="<?php echo $a_attack2['damage']; ?>" placeholder="damage" table="attacks" rowid="<?php echo $a_attack2['id']; ?>"><span
@@ -602,7 +608,7 @@ class character_funcs {
 			<span class="mediumText col2"><span
 				class="auto_size">Name: </span><input class="col6" type="text" name="name" value="<?php echo $a_armor2['name']; ?>" placeholder="name" table="armor" rowid="<?php echo $a_armor2['id']; ?>"><span
 				class="auto_size">Cost: </span><input class="fill" type="text" name="cost" value="<?php echo $a_armor2['cost']; ?>" placeholder="cost" table="armor" rowid="<?php echo $a_armor2['id']; ?>"><span
-				class="closeButton small" onclick="remove(this, <?php echo $a_armor2['id']; ?>, 'armor', 'Armor', true);" style="margin-top:7px;">X</span>
+				class="endButton closeButton small" onclick="remove(this, <?php echo $a_armor2['id']; ?>, 'armor', 'Armor', true);" style="margin-top:7px;">X</span>
 			</span>
 			<div class="mediumText"><span
 				class="auto_size">Modifier: </span><input class="col6" type="text" name="modifier" value="<?php echo $a_armor2['modifier']; ?>" placeholder="modifier" table="armor" rowid="<?php echo $a_armor2['id']; ?>"><span
@@ -678,11 +684,13 @@ class character_funcs {
 			'description'
 		));
 		$s_height = max(ceil(strlen($a_oddity2['description']) / 40), 1) * 16;
+		$s_name = "'".htmlspecialchars($a_oddity2['name'])."'";
 		?>
 		<div class="mediumText"><span
 			class="auto_size">Name: </span><input class="col3" type="text" name="name" value="<?php echo $a_oddity2['name']; ?>" placeholder="oddity" table="oddities" rowid="<?php echo $a_oddity2['id']; ?>"><span
 			class="auto_size">Description: </span><textarea class="fill smallTextarea" style="height:<?php echo $s_height; ?>px;" type="text" name="description" placeholder="description" table="oddities" rowid="<?php echo $a_oddity2['id']; ?>" style="height:<?php echo $s_height; ?>px;"><?php echo $a_oddity2['description']; ?></textarea><span
-			class="closeButton small" onclick="remove(this, <?php echo $a_oddity2['id']; ?>, 'oddities', 'Oddity', true);" style="margin-top:7px;">X</span>
+			class="endButton closeButton small" onclick="remove(this, <?php echo $a_oddity2['id']; ?>, 'oddities', 'Oddity', true);" style="margin-top:7px;">X</span><span
+			class="endButton shareButton small" onclick="share(this, <?php echo $a_oddity2['id']; ?>, 'oddities', 'Oddity', <?php echo $s_name; ?>);"></span>
 		</div>
 		<?php
 		}
@@ -777,7 +785,7 @@ class character_funcs {
 			<span class="collapsibleHeader" collapseid="place<?php echo $a_place2['id']; ?>">
 				<span class="auto_size">Name: </span>
 				<input class="col2" type="text" name="name" value="<?php echo $a_place2['name']; ?>" placeholder="name" table="places" rowid="<?php echo $a_place2['id']; ?>">
-				<span class="closeButton" onclick="remove(this, <?php echo $a_place2['id']; ?>, 'places', 'Place', true);">X</span>
+				<span class="endButton closeButton" onclick="remove(this, <?php echo $a_place2['id']; ?>, 'places', 'Place', true);">X</span>
 			</span>
 			<div class="collapsibleBody" style="padding:5px 0 5px 5px;">
 				<textarea class="fill" rows="15" name="description" placeholder="description" table="places" rowid="<?php echo $a_place2['id']; ?>"><?php echo $a_place2['description']; ?></textarea>
@@ -1134,6 +1142,21 @@ class character_funcs {
 						get_parent_by_tag("div", $(element)).remove();
 					}
 				}
+			}
+			window.share = function(element, rowid, table, description, name) {
+				var jform = $("#share_with_character_form");
+				jform.find("[name=rowid]").val(rowid);
+				jform.find("[name=table]").val(table);
+				jform.find("[name=character_id]").val(<?php echo $charid; ?>);
+				jform.find("[name=description]").val(description);
+				jform.find(".description").html(description);
+				jform.find(".name").html(name);
+				jform.find(".errors").html('');
+				jform.show();
+				jform.css({
+					top: ($(window).height() / 2 - jform.height() / 2) + "px",
+					left: ($(window).width() / 2 - jform.width() / 2) + "px"
+				});
 			}
 		</script>
 		<?php
