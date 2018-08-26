@@ -120,15 +120,17 @@ function draw_kick_players() {
 			$a_user = db_query("SELECT * FROM `[maindb]`.`users` WHERE `id`='{$s_uid}'",
 			                   array("maindb"=>$maindb));
 			$a_characters = campaign_funcs::get_characters($cid, FALSE, NULL, $a_user[0]['id']);
-			$s_username = htmlspecialchars($a_user[0]['username']);
-			$s_charname = htmlspecialchars($a_characters[0]['name']);
-			?>
-			<div>
-				User "<?php echo $s_username; ?>"
-				(character "<?php echo $s_charname; ?>")
-				<input type="button" value="Kick" onclick="kickUser(<?php echo "'{$s_username}', {$a_user[0]['id']}"; ?>);" />
-			</div>
-			<?php
+			if (count($a_characters) > 0) {
+				$s_username = htmlspecialchars($a_user[0]['username']);
+				$s_charname = htmlspecialchars($a_characters[0]['name']);
+				?>
+				<div>
+					User "<?php echo $s_username; ?>"
+					(character "<?php echo $s_charname; ?>")
+					<input type="button" value="Kick" onclick="kickUser(<?php echo "'{$s_username}', {$a_user[0]['id']}"; ?>);" />
+				</div>
+				<?php
+			}
 		}
 	} else {
 		echo "<div>This campaign does not have any players, yet.</div>";
@@ -181,15 +183,17 @@ function draw_change_gm() {
 			$a_user = db_query("SELECT * FROM `[maindb]`.`users` WHERE `id`='{$s_uid}'",
 			                   array("maindb"=>$maindb));
 			$a_characters = campaign_funcs::get_characters($cid, FALSE, NULL, $a_user[0]['id']);
-			$s_username = htmlspecialchars($a_user[0]['username']);
-			$s_charname = htmlspecialchars($a_characters[0]['name']);
-			?>
-			<div>
-				User "<?php echo $s_username; ?>"
-				(character "<?php echo $s_charname; ?>")
-				<input type="button" value="Bestow GM-ship" onclick="changeGM(<?php echo "'{$s_username}', {$a_user[0]['id']}"; ?>);" />
-			</div>
-			<?php
+			if (count($a_characters) > 0) {
+				$s_username = htmlspecialchars($a_user[0]['username']);
+				$s_charname = htmlspecialchars($a_characters[0]['name']);
+				?>
+				<div>
+					User "<?php echo $s_username; ?>"
+					(character "<?php echo $s_charname; ?>")
+					<input type="button" value="Bestow GM-ship" onclick="changeGM(<?php echo "'{$s_username}', {$a_user[0]['id']}"; ?>);" />
+				</div>
+				<?php
+			}
 		}
 	} else {
 		echo "<div>This campaign does not have any other players, yet. Have the future GM join the campaign in order to grant them ownership.</div>";
@@ -394,6 +398,108 @@ function draw_copy_characters() {
 	return $s_page;
 }
 
+function draw_remove_characters() {
+	global $global_user;
+	global $maindb;
+
+	$cid = intval(trim(get_get_var("id")));
+	$uid = $global_user->get_id();
+	$b_is_gm = campaign_funcs::is_gm($cid);
+	if (!$b_is_gm) {
+		return "Only the campaign GM can remove characters.";
+	}
+	$a_characters = campaign_funcs::get_characters($cid, $b_is_gm);
+	$a_campaigns = campaign_funcs::get_campaigns($cid);
+	$a_removedIds = explodeIds($a_campaigns[0]['removedCharacters']);
+	$s_removedIds = join("','", $a_removedIds);
+	$a_removedCharacters = db_query("SELECT * FROM `[maindb]`.`characters` WHERE `id` IN ('{$s_removedIds}')",
+	                                array("maindb"=>$maindb));
+	if (count($a_characters) == 0) {
+		return "There are no characters for the campaign.";
+	}
+
+	ob_start();
+	?>
+	<h2 class="title">Remove Old Characters</h2>
+	<div style="margin-bottom: 10px;">
+		"Removing" a character makes the character invisible in the list of character tabs at the top of the campaign page.
+	</div>
+	<table class="auto_size">
+		<tr class="title start_collapsed" style="background-color: #ccc; cursor: pointer;">
+			<td colspan="2" style="text-align: center; padding: 4px;">Remove or Restore Characters</td>
+		</tr>
+		<tr>
+			<td style="text-align: center">Available Characters</td>
+			<td style="text-align: center">Removed Characters</td>
+		</tr>
+		<tr>
+			<td style="vertical-align: top">
+				<ul id="visible_characters" class="removable_chars" style="width: 300px; min-height: 60px; padding: 5px; background-color: white; border: 1px solid black; border-radius: 10px; box-shadow: 0px 0px 5px #ccc inset;">
+					<?php
+					foreach ($a_characters as $a_character) {
+						$s_charname = $a_character['name'];
+						$i_charId = intval($a_character['id']);
+						echo "<li class='character_block' charId='{$i_charId}' >{$s_charname}</li>\n";
+					}
+					?>
+				</ul>
+			</td>
+			<td style="vertical-align: top">
+				<ul id="hidden_characters" class="removable_chars" style="width: 300px; min-height: 60px; padding: 5px; background-color: white; border: 1px solid black; border-radius: 10px; box-shadow: 0px 0px 5px #ccc inset;">
+					<?php
+					foreach ($a_removedCharacters as $a_character) {
+						$s_charname = $a_character['name'];
+						$i_charId = intval($a_character['id']);
+						echo "<li class='character_block' charId='{$i_charId}' >{$s_charname}</li>\n";
+					}
+					?>
+				</ul>
+			</td>
+		</tr>
+	</table>
+	<div id="remove_chars_error"></div>
+	<script type="text/javascript">
+		$(document).ready(function() {
+			var updateRemovedCharsList = function(event, ui) {
+				var jitem = ui.item;
+				var jtarget = $(event.target);
+				var sourceIsAvail = jtarget.is("#visible_characters");
+				var destIsAvail = jitem.parent().is("#visible_characters");
+
+				// check if the container changed
+				if (sourceIsAvail == destIsAvail)
+					return;
+
+				// update the lists
+				var jerrors_label = $("#remove_chars_error");
+				var posts = {
+					"command": "remove_or_restore_character",
+					"campaign_id": "<?php echo $cid; ?>",
+					"character_id": jitem.attr("charid"),
+					"isRemove": (destIsAvail) ? "0" : "1"
+				}
+				console.log(posts);
+				set_html_and_fade_in(jerrors_label, "", "<span style='color:gray;font-weight:normal;'>syncing...</span>");
+				send_async_ajax_call("ajax.php", posts, true, function(retval) {
+					interpret_commands(retval, jerrors_label);
+				});
+			};
+			var makeSortable = function() {
+				$("#visible_characters, #hidden_characters").sortable({
+					connectWith: ".removable_chars",
+					stop: updateRemovedCharsList
+				}).disableSelection();
+			};
+			makeSortable();
+		});
+	</script>
+	<?php
+	$s_page = ob_get_contents();
+	ob_end_clean();
+
+	return $s_page;
+}
+
 function draw_modify_campaign_page() {
 	global $global_user;
 	global $maindb;
@@ -422,9 +528,10 @@ function draw_modify_campaign_page() {
 		<?php
 		echo draw_share_campaign();
 		echo draw_update_campaign();
+		echo draw_character_access();
+		echo draw_remove_characters();
 		echo draw_kick_players();
 		echo draw_change_gm();
-		echo draw_character_access();
 		echo draw_copy_characters();
 		?>
 		
@@ -463,6 +570,7 @@ function draw_modify_campaign_page() {
 				window.basicTitle = "<?php echo $s_campaign_name; ?> (" + window.location.href + ")";
 				document.title = window.basicTitle;
 			}
+			collapseTitlesFunc();
 			$.each($.merge(jautoCenter, jautoSize), autoSizeFunc);
 			$.each(jfill, fillFunc);
 			$.each(jcalculateCenter, autoCenterFunc);

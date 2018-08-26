@@ -600,6 +600,49 @@ class user_ajax {
 		return json_encode(array(
 			new command("print success", "Copied character! <a href='https://{$fqdn}/pages/campaigns/campaign.php?id={$new_cid}'>See it in the other campaign!</a>")));
 	}
+
+	public static function remove_or_restore_character() {
+		global $global_user;
+		global $maindb;
+
+		$cid = intval(trim(get_post_var("campaign_id")));
+		$charid = intval(trim(get_post_var("character_id")));
+		$b_is_remove = boolval(intval(get_post_var("isRemove")));
+		$b_is_gm = campaign_funcs::is_gm($cid);
+
+		// check for user access
+		if (!$b_is_gm) {
+			return json_encode(array(
+				new command("print failure", "Only the GM may remove or restore characters!")));
+		}
+
+		// check that the character can be found in the campaign
+		$s_source_col = ($b_is_remove) ? "characters" : "removedCharacters";
+		$s_dest_col = ($b_is_remove) ? "removedCharacters" : "characters";
+		$a_campaigns = db_query("SELECT * FROM `[maindb]`.`campaigns` WHERE `id`='[cid]' AND INSTR(`{$s_source_col}`,'|[charid]|')",
+		                        array("maindb"=>$maindb, "cid"=>$cid, "charid"=>$charid));
+		if (!is_array($a_campaigns) || count($a_campaigns) == 0) {
+			return json_encode(array(
+				new command("print failure", "That character can't be found in this campaign!")));
+		}
+
+		// move the character
+		$b_success = db_query("UPDATE `[maindb]`.`campaigns` SET `{$s_source_col}`=REPLACE(`{$s_source_col}`,'|[charid]|','') WHERE `id`='[cid]'",
+		                      array("maindb"=>$maindb, "cid"=>$cid, "charid"=>$charid));
+		if (!$b_success) {
+			return json_encode(array(
+				new command("print failure", "Database error")));
+		}
+		$b_success = db_query("UPDATE `[maindb]`.`campaigns` SET `{$s_dest_col}`=CONCAT(`{$s_dest_col}`,'|[charid]|') WHERE `id`='[cid]'",
+		                      array("maindb"=>$maindb, "cid"=>$cid, "charid"=>$charid));
+		if (!$b_success) {
+			return json_encode(array(
+				new command("print failure", "Database error (2)")));
+		}
+
+		return json_encode(array(
+			new command("print success", "Character updated!")));
+	}
 }
 
 if (!$global_user) {

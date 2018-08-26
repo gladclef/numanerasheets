@@ -40,8 +40,13 @@ function draw_character_tabs($a_characters, $b_is_gm, $cid) {
 			if ($b_is_gm)
 				$s_char_name = htmlspecialchars(substr($s_char_name, 0, 40));
 			$s_js = "onclick='draw_character({$charid})' onmouseover='$(this).addClass(\"mouse_hover\")' onmouseout='$(this).removeClass(\"mouse_hover\")'";
-			echo "<div class='tab {$s_selected}' charid='{$charid}' {$s_js}>{$s_char_name}</div>";
+			echo "<div class='tab {$s_selected}' charid='{$charid}' {$s_js}>{$s_char_name}</div>\n";
 			$s_selected = "";
+		}
+
+		if ($b_is_gm) {
+			$s_js = "onclick='create_new_character()' onmouseover='$(this).addClass(\"mouse_hover\")' onmouseout='$(this).removeClass(\"mouse_hover\")'";
+			echo "<div class='tab tab_add_new tooltip' {$s_js}>&nbsp;<span class='tooltiptext'>Create New Character</span></div>\n";
 		}
 
 		?>
@@ -66,6 +71,18 @@ function draw_character_tabs($a_characters, $b_is_gm, $cid) {
 			jsheetContainer.html(sheet);
 			jtabCurr.removeClass("selected");
 			jtab.addClass("selected");
+		}
+
+		var create_new_character = function() {
+			var jerrors_label = $("#floater").find(".floater_errors");
+			posts = {
+				"command": "create_character",
+				"campaign_id": <?php echo $cid; ?>
+			};
+			set_html_and_fade_in(jerrors_label, "", "<span style='color:gray;font-weight:normal;'>creating character...</span>");
+			send_ajax_call("ajax.php", posts, function(retval) {
+				interpret_commands(retval, jerrors_label);
+			});
 		}
 	</script>
 	<?php

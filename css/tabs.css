@@ -23,10 +23,25 @@ div.tab_contents {
 .tab.selected {
 	background-color:#fff;
 	font-weight:bold;
+	border: 1px solid black;
+	border-bottom: none;
+	border-top-left-radius: 5px;
+	border-top-right-radius: 5px;
 }
 
 .tab.mouse_hover {
 	background-color: #aaa;
+}
+
+.tab_add_new {
+	background-image: url(/images/addnew.png);
+	background-size: 29px;
+	background-repeat: no-repeat;
+	background-position: center;
+	border-top-right-radius: 30px;
+	border-bottom-right-radius: 30px;
+	width: 17px;
+	text-decoration: none;
 }
 
 div.tab_contents_div {

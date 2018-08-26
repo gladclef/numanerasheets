@@ -147,7 +147,10 @@ class campaign_funcs {
 			$uid = $global_user->get_id();
 		$s_filter_user = ($b_is_gm) ? "" : "AND INSTR(`users`,'|[uid]|')";
 		$s_filter_user .= ($charid == NULL) ? "" : " AND `id`='[charid]'";
-		$a_characters = db_query("SELECT * FROM `[maindb]`.`characters` WHERE `campaign`='[cid]' {$s_filter_user}",
+		$a_campaigns = campaign_funcs::get_campaigns($cid);
+		$a_characterIds = explodeIds($a_campaigns[0]['characters']);
+		$s_characterIds = join("','", $a_characterIds);
+		$a_characters = db_query("SELECT * FROM `[maindb]`.`characters` WHERE `campaign`='[cid]' AND `id` IN ('{$s_characterIds}') {$s_filter_user}",
 		                         array("maindb"=>$maindb, "cid"=>$cid, "uid"=>$uid, "charid"=>$charid));
 		return $a_characters;
 	}

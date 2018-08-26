@@ -395,7 +395,7 @@ class character_funcs {
 			<div class="collapsibleBody">
 
 				<div>
-				<span class="auto_size">Cost: </span><input class="col5" type="text" name="cost" value="<?php echo $a_ability2['cost']; ?>" placeholder="depletion" table="abilities" rowid="<?php echo $a_ability2['id']; ?>">
+				<span class="auto_size">Cost: </span><input class="col5" type="text" name="cost" value="<?php echo $a_ability2['cost']; ?>" placeholder="cost" table="abilities" rowid="<?php echo $a_ability2['id']; ?>">
 				</div>
 
 				<div><span>Description</span></div>
@@ -406,6 +406,36 @@ class character_funcs {
 		<?php
 		}
 
+		$s_page = ob_get_contents();
+		ob_end_clean();
+
+		return $s_page;
+	}
+
+	public static function Abilities($a_character) {
+		global $global_user;
+		global $maindb;
+
+		$a_abilities = character_funcs::get_related_table_entries($a_character, "abilities");
+		$a_inabilities = character_funcs::get_related_table_entries($a_character, "inabilities");
+
+		ob_start();
+		?>
+		<div class="descriptor_group">
+			<span class="auto_center title" collapseid="GroupAbil">Abilities</span>
+
+			<div id="ability_elements" class="elements">
+			<?php
+			echo character_funcs::draw_abilities($a_abilities);
+			?>
+			</div>
+			
+			<div>
+			<span class="auto_center largeText" onclick="addNew('abilities', 'Ability', 'ability_elements');" style="color:blue; text-decoration:underline; width:165px; cursor:pointer;">Add New Ability</span>
+			</div>
+
+		</div>
+		<?php
 		$s_page = ob_get_contents();
 		ob_end_clean();
 
@@ -441,30 +471,16 @@ class character_funcs {
 		return $s_page;
 	}
 
-	public static function Abilities($a_character) {
+	public static function Inabilities($a_character) {
 		global $global_user;
 		global $maindb;
 
-		$a_abilities = character_funcs::get_related_table_entries($a_character, "abilities");
 		$a_inabilities = character_funcs::get_related_table_entries($a_character, "inabilities");
 
 		ob_start();
 		?>
 		<div class="descriptor_group">
-			<span class="auto_center title" collapseid="GroupAbil">Abilities</span>
-
-			<div id="ability_elements" class="elements">
-			<?php
-			echo character_funcs::draw_abilities($a_abilities);
-			?>
-			</div>
-			
-			<div>
-			<span class="auto_center largeText" onclick="addNew('abilities', 'Ability', 'ability_elements');" style="color:blue; text-decoration:underline; width:165px; cursor:pointer;">Add New Ability</span>
-			</div>
-
-			<hr class="col2 auto_center" style="display:block;">
-			<span class="auto_center smallTitle">Inabilities</span>
+			<span class="auto_center title" collapseid="GroupInabil">Inabilities</span>
 			<div id="inability_elements" class="elements">
 			<?php
 			echo character_funcs::draw_inabilities($a_inabilities);
@@ -923,20 +939,6 @@ class character_funcs {
 						sendUpdate("collapseIds", collapseStr, "", "<?php echo $charid; ?>", jerrors_label);
 					}, 500);
 				};
-				var collapseTitleFunc = function(e) {
-					var jelement = $(e.target);
-					var jgroup = jelement.parent();
-					var jother = jelement.siblings();
-					jother.stop();
-					if (jgroup.hasClass("collapsed")) {
-						jgroup.removeClass("collapsed");
-						jother.show(200);
-					} else {
-						jgroup.addClass("collapsed");
-						jother.hide(200);
-					}
-					registerCollapsibles();
-				};
 				var autoSizeFunc = function(k, v) {
 					var jelement = $(v);
 					jelement.css({"width": jelement.width() + "px"});
@@ -985,10 +987,6 @@ class character_funcs {
 					jheader.click(collapseCollapsible);
 					jheader.children().click(function(event) { event.stopPropagation(); });
 				};
-				var collapseTitlesFunc = function(k, v) {
-					var jtitle = $(v);
-					jtitle.click(collapseTitleFunc);
-				};
 				window.autoCollapse = function(k, v) {
 					var jelement = $(v);
 					if (typeof window.collapseids === 'string' || window.collapseids instanceof String) {
@@ -1008,7 +1006,7 @@ class character_funcs {
 					window.basicTitle = "<?php echo $s_campaign_name; ?> (" + window.location.href + ")";
 					document.title = window.basicTitle;
 				}
-				$.each(jtitles, collapseTitlesFunc);
+				collapseTitlesFunc(registerCollapsibles);
 				$.each($.merge(jautoCenter, jautoSize), autoSizeFunc);
 				$.each(jfill, fillFunc);
 				$.each(jcalculateCenter, autoCenterFunc);
@@ -1207,7 +1205,7 @@ class character_funcs {
 			"accomplishments"=>"", //varchar
 			"campaign"=>$cid, //int
 			"users"=>"|{$uid}|", //int
-			"drawOrder"=>"Core,Cyphers,Artifacts,Skills,Abilities,Equipment,Combat,Oddities,Character_Relations,Places,Journal,Description", //varchar
+			"drawOrder"=>"Core,Cyphers,Artifacts,Skills,Abilities,Inabilities,Equipment,Combat,Oddities,Character_Relations,Places,Journal,Description", //varchar
 			"collapseIds"=>""
 
 		);

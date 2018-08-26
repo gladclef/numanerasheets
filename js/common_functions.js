@@ -81,6 +81,20 @@ function get_parent_by_tag(s_tagname, jobject) {
 	return jparent;
 }
 
+function get_parent_by_class(s_classname, jobject) {
+	if (jobject.parent().length == 0)
+		return null;
+	var jparent = $(jobject.parent()[0]);
+	while (!jparent.hasClass(s_classname)) {
+		if (jparent.parent().length > 0) {
+			jparent = jparent.parent();
+		} else {
+			return null;
+		}
+	}
+	return jparent;
+}
+
 function get_child_depth(jchild, jparent) {
 	var parent = jchild;
 	var depth = 0;
@@ -209,4 +223,34 @@ function setUpdateTimeout(e, timeoutName, className, updateFunc) {
 		}
 		updateFunc();
 	}, 1000);
+};
+
+function collapseTitleFunc(jtitle, callback) {
+	var jgroup = jtitle.parent();
+	var jother = jtitle.siblings();
+	jother.stop();
+	if (jgroup.hasClass("collapsed")) {
+		jgroup.removeClass("collapsed");
+		jother.show(200);
+	} else {
+		jgroup.addClass("collapsed");
+		jother.hide(200);
+	}
+	if (callback != undefined) {
+		callback();
+	}
+};
+
+function collapseTitlesFunc(callback) {
+	var jtitles = $(".title");
+	var execFunc = function(k, v) {
+		var jtitle = $(v);
+		jtitle.click(function() {
+			collapseTitleFunc(jtitle, callback);
+		});
+		if (jtitle.hasClass("start_collapsed")) {
+			collapseTitleFunc(jtitle);
+		}
+	};
+	$.each(jtitles, execFunc);
 };

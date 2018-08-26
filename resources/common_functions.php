@@ -103,6 +103,7 @@ function draw_page_head($outside_content = '') {
 	$a_page[] = "<link href='/css/Settings.css' rel='stylesheet' type='text/css'>";
 	$a_page[] = "<link href='/css/tabs.css' rel='stylesheet' type='text/css'>";
 	$a_page[] = "<link href='/css/descriptor_group.css' rel='stylesheet' type='text/css'>";
+	$a_page[] = "<link href='/css/tooltip.css' rel='stylesheet' type='text/css'>";
 	//$a_page[] = "<link href='/css/calendar.css' rel='stylesheet' type='text/css'>";
 	$a_page[] = '<script src="'.$global_path_to_jquery.'"></script>';
 	$a_page[] = '<script src="'.$global_path_to_jquery_ui.'"></script>';

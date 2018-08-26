@@ -297,3 +297,11 @@ form select {
 	black;
 	opacity: 0.2;
 }
+
+.character_block {
+	padding: 5px;
+	margin: 5px;
+	border: 1px solid #c5c5c5;
+	background: white;
+	list-style-type: none;
+}
