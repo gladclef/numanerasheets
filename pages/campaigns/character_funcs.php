@@ -518,7 +518,7 @@ class character_funcs {
 			class="auto_size">Name: </span><input class="col3" type="text" name="name" value="<?php echo $a_equipment2['name']; ?>" placeholder="equipment" table="equipment" rowid="<?php echo $a_equipment2['id']; ?>"><span
 			class="auto_size">Description: </span><textarea class="fill smallTextarea" style="height:<?php echo $s_height; ?>px;" name="description" placeholder="description" table="equipment" rowid="<?php echo $a_equipment2['id']; ?>"><?php echo $a_equipment2['description']; ?></textarea><span
 			class="endButton closeButton small" onclick="remove(this, <?php echo $a_equipment2['id']; ?>, 'equipment', 'Equipment', true);" style="margin-top:7px;">X</span><span
-			class="endButton shareButton small" onclick="share(this, <?php echo $a_equipment2['id']; ?>, 'equipment', 'Equipment', <?php echo $s_name; ?>);"></span>
+			class="endButton shareButton small" onclick="share(this, <?php echo $a_equipment2['id']; ?>, 'equipment', 'Equipment', <?php echo $s_name; ?>);" style="margin-top:7px;"></span>
 		</div>
 		<?php
 		}
@@ -539,6 +539,11 @@ class character_funcs {
 		?>
 		<div class="descriptor_group">
 			<span class="auto_center title" collapseid="GroupEquip">Equipment</span>
+
+			<div>
+			<span class="col3"></span><span class="col3"></span>
+			<span class="auto_size">Shins: </span><input class="fill" type="text" name="shins" value="<?php echo $a_character['shins']; ?>" placeholder="shins"></span>
+			</div>
 
 			<div id="equipment_elements" class="elements">
 			<?php
@@ -690,7 +695,7 @@ class character_funcs {
 			class="auto_size">Name: </span><input class="col3" type="text" name="name" value="<?php echo $a_oddity2['name']; ?>" placeholder="oddity" table="oddities" rowid="<?php echo $a_oddity2['id']; ?>"><span
 			class="auto_size">Description: </span><textarea class="fill smallTextarea" style="height:<?php echo $s_height; ?>px;" type="text" name="description" placeholder="description" table="oddities" rowid="<?php echo $a_oddity2['id']; ?>" style="height:<?php echo $s_height; ?>px;"><?php echo $a_oddity2['description']; ?></textarea><span
 			class="endButton closeButton small" onclick="remove(this, <?php echo $a_oddity2['id']; ?>, 'oddities', 'Oddity', true);" style="margin-top:7px;">X</span><span
-			class="endButton shareButton small" onclick="share(this, <?php echo $a_oddity2['id']; ?>, 'oddities', 'Oddity', <?php echo $s_name; ?>);"></span>
+			class="endButton shareButton small" onclick="share(this, <?php echo $a_oddity2['id']; ?>, 'oddities', 'Oddity', <?php echo $s_name; ?>);" style="margin-top:7px;"></span>
 		</div>
 		<?php
 		}
