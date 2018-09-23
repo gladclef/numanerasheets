@@ -51,6 +51,23 @@ function db_query($s_query, $a_values=NULL, $b_print_query = FALSE) {
 	return $a_retval;
 }
 
+function get_latest_insert_id($s_table) {
+	global $maindb;
+
+	$id = 0;
+	$a_ids = db_query("SELECT LAST_INSERT_ID() AS id");
+	if (is_array($a_ids) && count($a_ids) > 0)
+		$id = intval($a_ids[0]['id']);
+	if ($id == 0)
+		$a_ids = db_query("SELECT `id` FROM `[maindb]`.`[table]` ORDER BY `id` DESC LIMIT 1",
+		                  array("maindb"=>$maindb, "table"=>$s_table));
+	if (!is_array($a_ids) || count($a_ids) == 0) {
+		error_log("Database error while trying to get created instance id!");
+		return "Database error retrieving new instance's id";
+	}
+	return intval($a_ids[0]['id']);
+}
+
 /**
  * Attempts to concatenate the $a_vals[concatValName] onto the end of the given column.
  * If the update failed, or the entire value is not added, then the previous value is restored.
@@ -122,6 +139,22 @@ function open_db() {
 	}
 	$global_opened_db = TRUE;
 	return TRUE;
+}
+
+// returns the ids as a string, eg "|1||2|...|n-1||n|", or FALSE if there's an error
+function getIdsFromTable($s_database, $s_tablename, $a_where_vars, $b_print_query = FALSE) {
+	$s_where_clause = (count($a_where_vars) > 0) ? "WHERE ".array_to_where_clause($a_where_vars) : "";
+	$s_count = "COUNT(`id`) AS `count`";
+	$s_concat = "CONCAT('|', GROUP_CONCAT(`id` SEPARATOR '||'), '|') AS `ids`";
+	$a_result = db_query("SELECT {$s_count},{$s_concat} FROM `[database]`.`[tablename]` {$s_where_clause}",
+	                     array("database"=>$s_database, "tablename"=>$s_tablename), $b_print_query);
+	if (!is_array($a_result))
+	{
+		return FALSE;
+	}
+	if (count($a_result) == 0 || (int)$a_result[0]["count"] == 0)
+		return "";
+	return $a_result[0]['ids'];
 }
 
 // returns "`key1`='value1' AND `key2`='value2' AND ..."
@@ -270,8 +303,7 @@ function getTableNames() {
 	return $a_retval;
 }
 
-function getColumnNames($s_tablename)
-{
+function getColumnNames($s_tablename) {
 	global $maindb;
 	global $mysqli;
 	$a_retval = array();

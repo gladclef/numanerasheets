@@ -24,33 +24,12 @@ function draw_back_to_welcome() {
 	return $s_page;
 }
 
-function draw_character_tabs($a_characters, $b_is_gm, $cid) {
+function draw_character_tab_scripts($cid)
+{
 	global $fqdn;
 
 	ob_start();
 	?>
-	<div class="character_tabs">
-		<?php
-
-		$s_selected = "selected";
-		foreach ($a_characters as $a_character)
-		{
-			$charid = $a_character['id'];
-			$s_char_name = $a_character['name'];
-			if ($b_is_gm)
-				$s_char_name = htmlspecialchars(substr($s_char_name, 0, 40));
-			$s_js = "onclick='draw_character({$charid})' onmouseover='$(this).addClass(\"mouse_hover\")' onmouseout='$(this).removeClass(\"mouse_hover\")'";
-			echo "<div class='tab {$s_selected}' charid='{$charid}' {$s_js}>{$s_char_name}</div>\n";
-			$s_selected = "";
-		}
-
-		if ($b_is_gm) {
-			$s_js = "onclick='create_new_character()' onmouseover='$(this).addClass(\"mouse_hover\")' onmouseout='$(this).removeClass(\"mouse_hover\")'";
-			echo "<div class='tab tab_add_new tooltip' {$s_js}>&nbsp;<span class='tooltiptext'>Create New Character</span></div>\n";
-		}
-
-		?>
-	</div>
 	<script type="text/javascript">
 		var draw_character = function(charid) {
 			var jtabCurr = $("div.tab.selected");
@@ -88,6 +67,40 @@ function draw_character_tabs($a_characters, $b_is_gm, $cid) {
 	return $s_page;
 }
 
+function draw_character_tabs($a_characters, $b_is_gm, $cid) {
+	global $fqdn;
+
+	ob_start();
+	?>
+	<div class="character_tabs">
+		<?php
+
+		$s_selected = "selected";
+		foreach ($a_characters as $a_character)
+		{
+			$charid = $a_character['id'];
+			$s_char_name = $a_character['name'];
+			if ($b_is_gm)
+				$s_char_name = htmlspecialchars(substr($s_char_name, 0, 40));
+			$s_js = "onclick='draw_character({$charid})' onmouseover='$(this).addClass(\"mouse_hover\")' onmouseout='$(this).removeClass(\"mouse_hover\")'";
+			echo "<div class='tab {$s_selected}' charid='{$charid}' {$s_js}>{$s_char_name}</div>\n";
+			$s_selected = "";
+		}
+
+		if ($b_is_gm) {
+			$s_js = "onclick='create_new_character()' onmouseover='$(this).addClass(\"mouse_hover\")' onmouseout='$(this).removeClass(\"mouse_hover\")'";
+			echo "<div class='tab tab_add_new tooltip' {$s_js}>&nbsp;<span class='tooltiptext'>Create New Character</span></div>\n";
+		}
+
+		?>
+	</div>
+	<?php
+	$s_page = ob_get_contents();
+	ob_end_clean();
+
+	return $s_page;
+}
+
 function draw_floater($a_groups) {
 	$s_style = (isset($_SESSION["left"])) ? "left: {$_SESSION['left']}px; top: {$_SESSION['top']};" : "";
 
@@ -105,6 +118,8 @@ function draw_floater($a_groups) {
 				echo "<span onclick=\"navigate(this);\" class=\"fill navigate\" style=\"display: inline-block;\">$s_group</span>";
 				echo "</div>";
 			}
+			if (count($a_groups) == 0)
+				echo "<div>Create a Character!</div>"
 			?>
 		</div>
 		<label class="errors floater_errors">&nbsp;</label>
@@ -123,13 +138,16 @@ function draw_share_form($a_campaigns) {
 	$cid = intval($a_campaigns[0]['id']);
 	$a_characterIds = explodeIds($a_campaigns[0]['characters']);
 	$s_characterIds = join(",", $a_characterIds);
-	$a_characters = db_query("SELECT `id`,`name` FROM `[maindb]`.`characters` WHERE `id` IN ({$s_characterIds})",
-	                         array("maindb"=>$maindb));
+	if (count($a_characterIds) > 0)
+		$a_characters = db_query("SELECT `id`,`name` FROM `[maindb]`.`characters` WHERE `id` IN ({$s_characterIds})",
+		                         array("maindb"=>$maindb));
+	else
+		$a_characters = array();
 
 	ob_start();
 	?>
 
-	<div id="share_with_character_form" style="display: hidden; position: fixed; margin: 0 auto; padding: 20px; background-color: white; border: 1px solid black; border-radius: 10px; box-shadow: 0px 0px 10px 5px rgba(0,0,0,0.3);">
+	<div id="share_with_character_form" style="display: none; position: fixed; margin: 0 auto; padding: 20px; background-color: white; border: 1px solid black; border-radius: 10px; box-shadow: 0px 0px 10px 5px rgba(0,0,0,0.3);">
 		<input type="hidden" name="command" value="share_with_character">
 		<input type="hidden" name="campaign_id" value="<?php echo $cid; ?>">
 		<input type="hidden" name="character_id" value="">
@@ -190,6 +208,7 @@ function draw_campaign_page() {
 
 	ob_start();
 
+	$a_group_order = array();
 	if (count($a_characters) > 0) {
 		$a_group_order = explode(",", $a_characters[0]['drawOrder']);
 		$charid = $a_characters[0]['id'];
@@ -210,8 +229,12 @@ function draw_campaign_page() {
 			echo "Database error";
 			return;
 		}
-		if ($b_is_gm || count($a_characters) > 0)
+		if ($b_is_gm || count($a_characters) > 1) {
 			echo draw_character_tabs($a_characters, $b_is_gm, $cid);
+		} else {
+			echo "<span style='display:block; height:14px;'></span>";
+		}
+		echo draw_character_tab_scripts($cid);
 
 		?>
 		<div id="sheet_container">

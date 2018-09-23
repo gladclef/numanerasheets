@@ -65,6 +65,18 @@
 	background-size: 40px;
 }
 
+.descriptor_group .col10 {
+	display: inline-block;
+	width: 85px;
+}
+.descriptor_group .col9 {
+	display: inline-block;
+	width: 97px;
+}
+.descriptor_group .col8 {
+	display: inline-block;
+	width: 112px;
+}
 .descriptor_group .col7 {
 	display: inline-block;
 	width: 130px;
@@ -93,6 +105,10 @@
 	display: inline-block;
 	width: 955px;
 }
+.descriptor_group .col1inner {
+	display: inline-block;
+	width: 925px;
+}
 
 .descriptor_group .auto_center {
 	display: table;
@@ -108,6 +124,44 @@
 	display: inline-block;
 	font-size: 16px;
 	vertical-align: top;
+}
+.descriptor_group .tokenField {
+	min-height: 28px;
+	display: inline-block;
+	border: 1px solid #aaa;
+	background-color: #eee;
+	border-radius: 5px;
+	position: relative;
+	top: -1px;
+	box-shadow: 0 0 5px #aaa inset;
+}
+.descriptor_group .tokenField .token {
+	display: inline-block;
+	margin: 2px;
+	padding: 0 4px;
+	border: 1px solid #aaa;
+	border-radius: 5px;
+}
+.descriptor_group .tokenField .token.selected {
+	box-shadow: 0 0 5px blue;
+	padding: 0 10px;
+}
+.descriptor_group .tokenField .token .counter {
+	border-left: 1px solid #aaa;
+	margin-left: 6px;
+	padding-left: 4px;
+}
+.descriptor_group .tokenField .addNewTextarea {
+	border: none;
+	width: 100px;
+	height: 26px;
+	display: inline-block;
+	background-color: transparent;
+	resize: none;
+	font-size: 14px;
+	border-radius: 5px;
+	border: 1px dashed #777;
+	height: 20px;
 }
 
 #floater {
@@ -197,6 +251,10 @@
 	background-position-x: 2px;
 	background-repeat: no-repeat;
 }
+.descriptor_group .endButton.shareButton.small {
+	background-size: 18px;
+	background-position-x: 1px;
+}
 .descriptor_group .endButton:hover {
 	background-color: #CCF;
 	border-color: blue;
@@ -205,6 +263,13 @@
 	width: 20px;
 	height: 20px;
 	font-size: 16px;
+}
+.descriptor_group .underEditor {
+	position: absolute;
+	background-color: white;
+	border: 1px solid black;
+	padding: 2px;
+	border-radius: 5px;
 }
 
 .descriptor_group textarea {

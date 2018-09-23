@@ -126,10 +126,21 @@ function parse_int(s_value) {
 		return s_value;
 	if (!s_value)
 		return 0;
+	s_value = s_value.replace(/^[^1-9]*/, '');
 	if (s_value.length == 0)
 		return 0;
-	s_value = s_value.replace(/^0*/, '');
 	return parseInt(s_value);
+}
+
+function parse_float(s_value) {
+	if (typeof(s_value) == "number")
+		return s_value;
+	if (!s_value)
+		return 0;
+	if (s_value.length == 0)
+		return 0;
+	s_value = s_value.replace(/^[^0-9]+?(\.?[0-9]+)(.*)/, function(match, p1, p2) { return p1+p2; });
+	return parseFloat(s_value);
 }
 
 function get_date() {
@@ -253,4 +264,55 @@ function collapseTitlesFunc(callback) {
 		}
 	};
 	$.each(jtitles, execFunc);
+};
+
+/**
+ * Meant to be used as the second argument in a call to jQuery.each(array, callback).
+ *
+ * Calls the given callback in a setTimeout(callback, 0) timeout in order
+ * to allow other javascript stuff to execute in a "parallel" sort of way.
+ *
+ * @param keyAndValue True to pass two arguments (key and value), false to just pass value.
+ */
+function multithreadedForEachCallback(callback, keyAndValue) {
+	var c2 = callback;
+	var kav = keyAndValue;
+	return function(k, v) {
+		var k2 = k;
+		var v2 = v;
+		setTimeout(function() {
+			if (kav) {
+				c2(k2, v2);
+			} else {
+				c2(v2);
+			}
+		}, 0);
+	}
+};
+
+function colorFade(ratio, emptyColor, midColor, fullColor) {
+	ratio = Math.min(Math.max(ratio, 0), 1);
+	var r1, r2, c1, c2;
+
+	if (ratio < 0.5)
+	{
+		var r2 = ratio * 2;
+		var r1 = 1 - r2;
+		c1 = emptyColor;
+		c2 = midColor;
+	}
+	else
+	{
+		var r2 = (ratio - 0.5) * 2;
+		var r1 = 1 - r2;
+		c1 = midColor;
+		c2 = fullColor;
+	}
+
+	var retval = [0, 0, 0];
+	for (var i = 0; i < 3; i++)
+	{
+		retval[i] = c1[i]*r1 + c2[i]*r2;
+	}
+	return retval;
 };

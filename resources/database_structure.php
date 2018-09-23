@@ -158,4 +158,123 @@ $a_database_insert_values = array(
 	)
 );
 
+class database_struct {
+	public static function isGroupTable($s_table)
+	{
+		$a_groupTables = array("iotumTypes");
+		return in_array($s_table, $a_groupTables);
+	}
+
+	public static function getNewVars($s_table, $cid) {
+		switch ($s_table) {
+			case 'artifacts':
+				return array(
+					"name"=>"",
+					"description"=>"",
+					"depletion"=>"",
+					"campaign"=>$cid,
+					"partyUnderstanding"=>""
+				);
+			case 'cyphers':
+				return array(
+					"name"=>"",
+					"level"=>"0",
+					"description"=>"",
+					"campaign"=>$cid,
+					"partyUnderstanding"=>""
+				);
+				break;
+			case 'skills':
+				return array(
+					"description"=>"",
+					"trained"=>0,
+					"skilled"=>0,
+					"inability"=>0,
+					"campaign"=>$cid
+				);
+			case 'abilities':
+				return array(
+					"description"=>"",
+					"name"=>"",
+					"cost"=>"",
+					"campaign"=>$cid
+				);
+			case 'inabilities':
+				return array(
+					"description"=>"",
+					"name"=>"",
+					"campaign"=>$cid
+				);
+			case 'playerIntrusions':
+				return array(
+					"description"=>"",
+					"name"=>"",
+					"campaign"=>$cid
+				);
+			case 'equipment':
+				return array(
+					"description"=>"",
+					"name"=>"",
+					"campaign"=>$cid
+				);
+			case 'attacks':
+				return array(
+					"name"=>"",
+					"damage"=>"",
+					"modifier"=>"",
+					"notes"=>"",
+					"campaign"=>$cid
+				);
+			case 'armor':
+				return array(
+					"name"=>"",
+					"cost"=>"",
+					"modifier"=>"",
+					"speedReduction"=>"",
+					"notes"=>"",
+					"campaign"=>$cid
+				);
+			case 'oddities':
+				return array(
+					"name"=>"",
+					"description"=>"",
+					"campaign"=>$cid
+				);
+			case 'places':
+				return array(
+					"name"=>"",
+					"description"=>"",
+					"campaign"=>$cid
+				);
+			case 'plans':
+				return array(
+					"name"=>"",
+					"level"=>"1",
+					"kind"=>"",
+					"iotum"=>"",
+					"parts"=>"1",
+					"specifications"=>"",
+					"modifications"=>"",
+					"depletion"=>"",
+					"other"=>"",
+					"campaign"=>$cid
+				);
+			case 'iotum':
+				return array(
+					"iotumType"=>1,
+					"quantity"=>"1"
+				);
+			case 'iotumTypes':
+				return array(
+					"name"=>"",
+					"value"=>"",
+					"level"=>"1",
+					"campaign"=>$cid
+				);
+			default:
+				return FALSE;
+		}
+	}
+}
+
 ?>

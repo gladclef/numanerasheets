@@ -16,8 +16,8 @@ class character_funcs {
 		$a_entryIds = explodeIds($a_character[$s_table]);
 		$a_entries = array();
 		if (trim(strlen($a_character[$s_table])) > 0 && count($a_entryIds) > 0) {
-			$s_cypherIds = join("','", $a_entryIds);
-			$a_entries = db_query("SELECT * FROM `[maindb]`.`[table]` WHERE `id` IN ('{$s_cypherIds}')",
+			$s_entryIds = join("','", $a_entryIds);
+			$a_entries = db_query("SELECT * FROM `[maindb]`.`[table]` WHERE `id` IN ('{$s_entryIds}')",
 			                      array("maindb"=>$maindb, "table"=>$s_table));
 			$_SESSION['sort_ids'] = $a_entryIds;
 			usort($a_entries, "character_funcs::sortBySessionIds");
@@ -93,7 +93,7 @@ class character_funcs {
 			<div style="margin:22px auto; width:100%">
 			<span class="col7"></span>
 			<span class="fill mediumText" style="text-align: center; display:inline-block">Recovery Rolls</span>
-			<span class="col4 mediumText" style="text-align: center;">Damage</span>
+			<span class="col4 mediumText" style="text-align: center;">Damage Track</span>
 			</div>
 			<div>
 			<span class="col7 checkCircleContainer" style="vertical-align: top; padding-top: 15px;">
@@ -171,6 +171,32 @@ class character_funcs {
 		return $s_page;
 	}
 
+	public static function Temporary_Notes($a_character) {
+		global $global_user;
+		global $maindb;
+
+		$a_character2 = escapeTextVals($a_character, array(
+			'tempNotes'
+		));
+		$s_tempNotes = $a_character2['tempNotes'];
+		$i_rows = max(5, strlen($s_tempNotes) / 120);
+
+		ob_start();
+		?>
+		<div class="descriptor_group">
+			<span class="auto_center title" collapseid="Temp Notes">Temporary Notes</span>
+
+			<div>
+				<?php echo "<textarea class=\"fill collapsibleBody\" name=\"tempNotes\" placeholder=\"temporary notes\" rowid=\"{$a_character2['id']}\" rows=\"{$i_rows}\">{$s_tempNotes}</textarea>"; ?>
+			</div>
+		</div>
+		<?php
+		$s_page = ob_get_contents();
+		ob_end_clean();
+
+		return $s_page;
+	}
+
 	public static function draw_cyphers($a_cyphers) {
 		ob_start();
 
@@ -231,7 +257,7 @@ class character_funcs {
 
 			<div>
 			<span class="col3"></span><span class="col3"></span>
-			<span class="auto_size">Cypher Limit: </span><input class="fill" type="text" name="cypherLimit" value="<?php echo $a_character2['cypherLimit']; ?>" placeholder="cypherLimit"></span>
+			<span class="auto_size">Cypher Limit: </span><input class="fill" type="text" name="cypherLimit" value="<?php echo $a_character2['cypherLimit']; ?>" placeholder="cypher limit"></span>
 			</div>
 
 			<div id="cypher_elements" class="elements">
@@ -275,6 +301,8 @@ class character_funcs {
 
 				<div>
 				<span class="auto_size">Depletion: </span><input class="col5" type="text" name="depletion" value="<?php echo $a_artifact2['depletion']; ?>" placeholder="depletion" table="artifacts" rowid="<?php echo $a_artifact2['id']; ?>">
+				<span class="col7" style="width: 30px;"></span>
+				<span class="auto_size">Level: </span><input class="col5" type="text" name="level" value="<?php echo $a_artifact2['level']; ?>" placeholder="level" table="artifacts" rowid="<?php echo $a_artifact2['id']; ?>">
 				</div>
 
 				<div class="mediumText" style="margin:0;"><span>Actual description</span></div>
@@ -446,6 +474,64 @@ class character_funcs {
 		return $s_page;
 	}
 
+	public static function draw_playerIntrusions($a_intrusions) {
+		ob_start();
+
+		foreach ($a_intrusions as $a_intrusion) {
+		$a_intrusion2 = escapeTextVals($a_intrusion, array(
+			'name',
+			'description'
+		));
+		?>
+		<div style="border-left:1px solid black; padding-left:5px; position:relative;">
+			<span class="collapsibleHeader" collapseid="instrus<?php echo $a_intrusion2['id']; ?>">
+				<span class="auto_size">Name: </span>
+				<input class="col2" type="text" name="name" value="<?php echo $a_intrusion2['name']; ?>" placeholder="name" table="playerIntrusions" rowid="<?php echo $a_intrusion2['id']; ?>">
+				<span class="endButton closeButton" onclick="remove(this, <?php echo $a_intrusion2['id']; ?>, 'playerIntrusions', 'Player Intrusion');">X</span>
+			</span>
+			<div class="collapsibleBody">
+				<div><span>Description</span></div>
+				<div><textarea class="fill" rows="4" name="description" placeholder="description" table="playerIntrusions" rowid="<?php echo $a_intrusion2['id']; ?>"><?php echo $a_intrusion2['description']; ?></textarea></div>
+			</div>
+		</div>
+		<?php
+		}
+
+		$s_page = ob_get_contents();
+		ob_end_clean();
+
+		return $s_page;
+	}
+
+	public static function Player_Intrusions($a_character) {
+		global $global_user;
+		global $maindb;
+
+		$a_intrusions = character_funcs::get_related_table_entries($a_character, "playerIntrusions");
+
+		ob_start();
+		?>
+		<div class="descriptor_group">
+			<span class="auto_center title" collapseid="GroupIntrus">Player Intrusions</span>
+
+			<div id="intrusion_elements" class="elements">
+			<?php
+			echo character_funcs::draw_playerIntrusions($a_intrusions);
+			?>
+			</div>
+			
+			<div>
+			<span class="auto_center largeText" onclick="addNew('playerIntrusions', 'Player Intrusion', 'intrusion_elements');" style="color:blue; text-decoration:underline; width:165px; cursor:pointer;">Add New Player Intrusion</span>
+			</div>
+
+		</div>
+		<?php
+		$s_page = ob_get_contents();
+		ob_end_clean();
+
+		return $s_page;
+	}
+
 	public static function draw_inabilities($a_inabilities) {
 		ob_start();
 
@@ -541,8 +627,9 @@ class character_funcs {
 			<span class="auto_center title" collapseid="GroupEquip">Equipment</span>
 
 			<div>
-			<span class="col3"></span><span class="col3"></span>
+			<span class="col2"></span>
 			<span class="auto_size">Shins: </span><input class="fill" type="text" name="shins" value="<?php echo $a_character['shins']; ?>" placeholder="shins"></span>
+			<span class="auto_size">Parts: </span><input class="col6" type="text" name="parts" value="<?php echo $a_character['parts']; ?>" placeholder="parts"></span>
 			</div>
 
 			<div id="equipment_elements" class="elements">
@@ -735,6 +822,411 @@ class character_funcs {
 		return $s_page;
 	}
 
+	public static function draw_plans($a_plans, $a_iotum) {
+		ob_start();
+
+		// builds a list of all iotum of the form:
+		// {
+		//   iotum-id: { "name":name, "cnt":quantity, "id":iotum-id },
+		//   ...
+		// }
+		$b_first = TRUE;
+		$s_iotum = "{";
+		foreach ($a_iotum as $a_iotumEntry)
+		{
+			if (!$b_first) $s_iotum .= ",";
+			$b_first = FALSE;
+			$a_iotumEntry2 = escapeTextVals($a_iotumEntry, array(
+				'name'
+			));
+			$s_iotum .= $a_iotumEntry2['id'] . ":{" .
+				"\"name\":\"" . $a_iotumEntry2['name'] . "\"," . 
+				"\"cnt\":" . $a_iotumEntry2['quantity'] . "," . 
+				"\"id\":" . $a_iotumEntry2['id'] .
+			"}";
+		}
+		$s_iotum .= "}";
+
+		foreach ($a_plans as $a_plan) {
+		$a_plan2 = escapeTextVals($a_plan, array(
+			'name',
+			'level',
+			'kind',
+			'parts',
+			'specifications',
+			'modifications',
+			'depletion',
+			'specialNotes'
+		));
+
+		?>
+		<div style="border-left:1px solid black; padding-left:5px; position:relative;">
+			<span class="collapsibleHeader" collapseid="plan<?php echo $a_plan2['id']; ?>">
+				<span class="auto_size">Name: </span>
+				<input class="col2" type="text" name="name" value="<?php echo $a_plan2['name']; ?>" placeholder="name" table="plans" rowid="<?php echo $a_plan2['id']; ?>">
+				<span class="endButton closeButton" onclick="remove(this, <?php echo $a_plan2['id']; ?>, 'plans', 'Plan');">X</span>
+			</span>
+			<div class="collapsibleBody mediumText">
+
+				<div>
+					<span class="auto_size">Minimum Crafter Level: </span><input class="col5" type="text" name="level" value="<?php echo $a_plan2['level']; ?>" placeholder="level" table="plans" rowid="<?php echo $a_plan2['id']; ?>">
+					<span class="auto_size">Kind: </span><input class="col5" type="text" name="kind" value="<?php echo $a_plan2['kind']; ?>" placeholder="kind" table="plans" rowid="<?php echo $a_plan2['id']; ?>">
+				</div>
+
+				<div class="col1inner"><span
+					class="auto_size">Iotum: </span><input
+					type="hidden" name="iotum" value="<?php echo $a_plan2['iotum']; ?>" placeholder="iotum" table="plans" rowid="<?php echo $a_plan2['id']; ?>"/><span
+					class="fill tokenField tokenCount" relTable="plans" relColumn="iotum" entries="iotumObj" rowid="<?php echo $a_plan2['id']; ?>" value="<?php echo $a_plan2['iotum']; ?>"
+				></span></div>
+
+				<div>
+					<span class="auto_size">Parts: </span><textarea class="col5 smallTextarea" style="height:20px" name="parts" value="<?php echo $a_plan2['parts']; ?>" placeholder="parts" table="plans" rowid="<?php echo $a_plan2['id']; ?>"></textarea>
+					<span class="auto_size">Depletion: </span><textarea class="col5 smallTextarea" style="height:20px" name="depletion" value="<?php echo $a_plan2['depletion']; ?>" placeholder="depletion" table="plans" rowid="<?php echo $a_plan2['id']; ?>"></textarea>
+				</div>
+
+				<div><span>Specifications:</span></div>
+				<div><textarea class="fill" rows="3" name="specifications" placeholder="specifications" table="plans" rowid="<?php echo $a_plan2['id']; ?>"><?php echo $a_plan2['specifications']; ?></textarea></div>
+
+				<div><span>Modifications:</span></div>
+				<div><textarea class="fill" rows="3" name="modifications" placeholder="modifications" table="plans" rowid="<?php echo $a_plan2['id']; ?>"><?php echo $a_plan2['modifications']; ?></textarea></div>
+
+				<div><span>Special Notes:</span></div>
+				<div><textarea class="fill" rows="2" name="specialNotes" placeholder="specialNotes" table="plans" rowid="<?php echo $a_plan2['id']; ?>"><?php echo $a_plan2['specialNotes']; ?></textarea></div>
+
+			</div>
+		</div>
+		<?php
+		}
+
+		?>
+		<script type="text/javascript">
+			window.iotumObj = <?php echo $s_iotum; ?>;
+			var drawAllTokenFields = function() {
+				var tokenFields = $(".tokenField");
+				var getTokensForField = function(jtokenField) {
+					var retval = [];
+					var value = [];
+					try {
+						value = JSON.parse(jtokenField.attr('value'));
+					} catch (error) {
+						console.log(error);
+					}
+					for (var i = 0; i < value.length; i++) {
+						retval.push({
+							tokenId: value[i][0],
+							requires: value[i][1]
+						});
+					}
+					return retval;
+				};
+				var updateTokenFieldValue = function(jtokenField, addTokenId, removeTokenId, updateTokenId, updateTokenCnt) {
+					if (arguments.length < 2) addTokenId = null;
+					if (arguments.length < 3) removeTokenId = null;
+					if (arguments.length < 5) { updateTokenId = null; updateTokenCnt = null; }
+					var value = getTokensForField(jtokenField);
+					var condensedVal = [];
+					for (var i = 0; i < value.length; i++) {
+						var val = value[i];
+						if (addTokenId !== null && val.tokenId == addTokenId) {
+							addTokenId = null;
+						}
+						if (removeTokenId === null || val.tokenId != removeTokenId) {
+							condensedVal.push([ val.tokenId, val.requires ]);
+						}
+					}
+					if (addTokenId !== null) {
+						addTokenId = parse_int(addTokenId);
+						condensedVal.push([addTokenId, 1]);
+					}
+					if (updateTokenId !== null) {
+						updateTokenId = parse_int(updateTokenId);
+						updateTokenCnt = parse_int(updateTokenCnt);
+						for (var i = 0; i < condensedVal.length; i++) {
+							if (condensedVal[i][0] == updateTokenId)
+								condensedVal[i][1] = updateTokenCnt;
+						}
+					}
+					var newValue = JSON.stringify(condensedVal);
+
+					var planId = jtokenField.attr("rowid");
+					var jerrors_label = $("#floater").find(".floater_errors");
+					sendUpdate("iotum", newValue, "plans", planId, jerrors_label);
+					jtokenField.attr('value', newValue);
+				};
+				var drawIotumEditor = function(jtoken, a_token, entries) {
+					var jeditor = $("#iotumEditor");
+					var jtokenField = jtoken.parent();
+					var top = jtoken.position().top * 2 + jtoken.outerHeight();
+					var left = jtoken.position().left;
+					var a_jtoken = [jtoken];
+					jeditor.remove();
+
+					var jeditor = $("<div id='iotumEditor' class='underEditor'></div>");
+					jtokenField.append(jeditor);
+					jeditor.css({ "top" : (top+"px"), "left" : (left+"px") });
+					var jrequiresTxt = $("<span style='padding:4px'>Requires:</span>");
+					var jrequiresCnt = $("<input type='number' style='text-align:right; padding:4px 0; width:40px;' />");
+					var jdelete = $("<span style='width:39px; height:24px; display:inline-block; margin:0 2px; position:relative; top:-3px; cursor:pointer; background-image:url(\"/images/trash.png\"); background-repeat:no-repeat; background-size:17px; background-position:11px 3px; background-color:rgba(0,0,0,0.1); border:1px solid #aaa; border-radius:3px;'>&nbsp;</span>");
+					jeditor.append(jrequiresTxt);
+					jeditor.append(jrequiresCnt);
+					jeditor.append(jdelete);
+					jrequiresCnt.focus();
+
+					jrequiresCnt.val(a_token.requires);
+					jrequiresCnt.keypress(cancel_enter_keypress);
+					var requiresCntUpdate = function(e) {
+						a_token.requires = jrequiresCnt.val();
+						updateTokenFieldValue(jtokenField, null, null, a_token.tokenId, jrequiresCnt.val());
+						var jnewToken = drawToken(jtokenField, a_token, entries);
+						jnewToken.insertAfter(a_jtoken[0]);
+						a_jtoken[0].remove();
+						a_jtoken[0] = jnewToken;
+					};
+					jrequiresCnt.keyup(function(e) { cancel_enter_keypress(e); requiresCntUpdate(e) });
+					jrequiresCnt.mouseup(requiresCntUpdate);
+					jdelete.mouseenter(function() { jdelete.css("background-color", "rgba(0,0,0,0.3)") });
+					jdelete.mouseleave(function() { jdelete.css("background-color", "rgba(0,0,0,0.1)") });
+					jdelete.click(function() {
+						updateTokenFieldValue(jtokenField, null, a_token.tokenId);
+						drawTokenField(jtokenField);
+						jeditor.remove();
+					});
+				};
+				var drawIotumAdder = function(jtokenField, jtokenAddNew, entries) {
+					var jeditor = $("#iotumEditor");
+					var top = jtokenAddNew.position().top * 2 + jtokenAddNew.outerHeight();
+					var left = jtokenAddNew.position().left;
+					jeditor.remove();
+
+					var jeditor = $("<div id='iotumEditor' class='underEditor'></div>");
+					jtokenField.append(jeditor);
+					jeditor.css({ "top" : (top+"px"), "left" : (left+"px") });
+
+					var first = true;
+					$.each(entries, function(k, entry) {
+						var jentry = $("<span style='padding:0 4px; border:1px solid #aaa; border-radius:5px; background-color:#eee; margin:2px; cursor:pointer;'></span>");
+						if (first) {
+							jentry.addClass("adderDefault");
+							jentry.css("background-color", "#eef");
+						}
+						jentry.text(entry.name);
+						jentry.click(function() {
+							updateTokenFieldValue(jtokenField, entry.id, null);
+							drawTokenField(jtokenField);
+							jeditor.remove();
+							jtokenField.find(".addNewTextarea").focus();
+						});
+						jentry.mouseenter(function() { jentry.css("background-color", "#aaa"); })
+						jentry.mouseleave(function() { jentry.css("background-color", "#eee"); })
+						jeditor.append(jentry);
+						first = false;
+					});
+				};
+				var selectToken = function(jtoken, a_token, entries) {
+					var isSelected = jtoken.hasClass("selected");
+					$(".token.selected").removeClass("selected");
+					if (isSelected) {
+						var jeditor = $("#iotumEditor");
+						jeditor.remove();
+					} else {
+						jtoken.addClass("selected");
+						drawIotumEditor(jtoken, a_token, entries);
+					}
+				};
+				var drawToken = function(jtokenField, a_token, entries) {
+					var tokenEntry = entries[a_token.tokenId];
+					var cnt = parse_int(tokenEntry.cnt);
+					var total = parse_int(a_token.requires);
+					var c = Math.max(Math.min(cnt / total, 1.0), 0.0);
+					var rgb = colorFade(c, [255,0,0], [255,255,0], [0,255,0]);
+					
+					var jtoken = $("<span class='token'></span>");
+					jtoken.text(tokenEntry.name);
+					jtoken.css("background-color", "rgb("+rgb[0]+","+rgb[1]+","+rgb[2]+")");
+					var jcounter = $("<span class='counter'></span>");
+					jcounter.text(cnt + "/" + total);
+					jtoken.append(jcounter);
+
+					jtoken.click(function() { selectToken(jtoken, a_token, entries) });
+
+					return jtoken;
+				};
+				var drawInsertTextarea = function(jtokenField) {
+					// get the available tokens to add
+					var entries = window[jtokenField.attr('entries')];
+					var value = getTokensForField(jtokenField);
+					var unusedTokens = $.extend({}, entries);
+					for (var i = 0; i < value.length; i++) {
+						delete unusedTokens[value[i].tokenId];
+					}
+
+					// create the textarea
+					var jtextarea = $("<input type='text' class='addNewTextarea' />");
+					jtokenField.append(jtextarea);
+
+					// attach handlers
+					jtextarea.keypress(cancel_enter_keypress);
+					jtextarea.keyup(function(e) {
+						cancel_enter_keypress(e);
+						var toDraw = [];
+						var val = jtextarea.val().toLowerCase();
+						$.each(unusedTokens, function(tokenId, entry) {
+							if (entry.name.toLowerCase().startsWith(val)) {
+								toDraw.push(entry);
+							}
+						});
+						if (toDraw.length > 0) {
+							drawIotumAdder(jtokenField, jtextarea, toDraw);
+						}
+						if (e.which == 13) {
+							$(".adderDefault").click();
+						}
+					});
+				};
+				var drawTokenField = function(e) {
+					var jtokenField = $(e);
+					kill_children(jtokenField);
+					var value = getTokensForField(jtokenField);
+					var entries = window[jtokenField.attr('entries')];
+					$.each(value, function(k, a_token) {
+						var jtoken = drawToken(jtokenField, a_token, entries);
+						jtokenField.append(jtoken);
+					});
+					jtokenField.append(drawInsertTextarea(jtokenField));
+				};
+				$.each(tokenFields, multithreadedForEachCallback(drawTokenField, false));
+			}
+			$(document).ready(drawAllTokenFields);
+		</script>
+		<?php
+
+		$s_page = ob_get_contents();
+		ob_end_clean();
+
+		return $s_page;
+	}
+
+	public static function draw_iotum($a_iotum) {
+		ob_start();
+
+		foreach ($a_iotum as $a_iotumEntry) {
+		$a_iotumEntry2 = escapeTextVals($a_iotumEntry, array(
+			'name',
+			'value',
+			'level',
+			'quantity'
+		));
+		?>
+		<div class="mediumText"><span
+
+			class="auto_size">Name: </span><input
+			class="col5" type="text" name="name" value="<?php echo $a_iotumEntry2['name']; ?>" placeholder="name" table="iotumTypes" rowid="<?php echo $a_iotumEntry2['iotumType']; ?>"><span
+
+			class="auto_size"> Value: </span><textarea
+			class="col10 smallTextarea" style="height:20px;" type="text" name="value" placeholder="value" table="iotumTypes" rowid="<?php echo $a_iotumEntry2['iotumType']; ?>" style="height:20px;"><?php echo $a_iotumEntry2['value']; ?></textarea><span
+
+			class="auto_size"> Level: </span><textarea
+			class="col10 smallTextarea" style="height:20px;" type="text" name="level" placeholder="level" table="iotumTypes" rowid="<?php echo $a_iotumEntry2['iotumType']; ?>" style="height:20px;"><?php echo $a_iotumEntry2['level']; ?></textarea><span
+
+			class="auto_size"> Quantity: </span><textarea
+			class="fill smallTextarea iotumQuantity" style="height:20px;" type="text" name="quantity" placeholder="quantity" table="iotum" rowid="<?php echo $a_iotumEntry2['id']; ?>" style="height:20px;"><?php echo $a_iotumEntry2['quantity']; ?></textarea><span
+
+			class="endButton closeButton small" onclick="remove(this, <?php echo $a_iotumEntry2['iotumType']; ?>, 'iotumTypes', 'Iotum Type', true, 'WARNING!!! This will remove this iotum for everybody. Continue?');" style="margin-top:7px;">X</span>
+		</div>
+		<?php
+		}
+
+		?>
+		<script type="text/javascript">
+			var activateIotumQuantityCallbacks = function() {
+				var jiotumQuantityFields = $("#iotum_elements").find("textarea.iotumQuantity");
+				$.each(jiotumQuantityFields, function(k, iotumQuantityField) {
+					var jfield = $(iotumQuantityField);
+					jfield.keyup(function() {
+						var id = parse_int(jfield.attr("rowid"));
+						window.iotumObj[id].cnt = jfield.val();
+						if (window.iotumObjUpdateTimeout !== undefined) {
+							clearTimeout(window.iotumObjUpdateTimeout);
+						}
+						window.iotumObjUpdateTimeout = setTimeout(function() {
+							drawAllTokenFields();
+							window.iotumObjUpdateTimeout = undefined;
+						}, 500);
+					});
+				});
+			};
+			$(document).ready(activateIotumQuantityCallbacks);
+		</script>
+		<?php
+
+		$s_page = ob_get_contents();
+		ob_end_clean();
+
+		return $s_page;
+	}
+
+	public static function Crafting($a_character) {
+		global $global_user;
+		global $maindb;
+
+		// Get the iotumTypes ids and intersect those with the ids in the character iotum
+		// to find currently visible iotum.
+		$a_iotumTypesRaw = db_query("SELECT * FROM `[maindb]`.`iotumTypes` WHERE `campaign`='[cid]'",
+		                            array("maindb"=>$maindb, "cid"=>$a_character['campaign']));
+		$a_iotumTypesIds = getValuesOfInnerArraysByKey($a_iotumTypesRaw, "id");
+		$a_iotumTypes = array();
+		foreach ($a_iotumTypesRaw as $a_iotumType) {
+			$a_iotumTypes[$a_iotumType['id']] = $a_iotumType;
+		}
+		$a_iotumAll = character_funcs::get_related_table_entries($a_character, "iotum");
+		$a_iotum = array();
+		foreach ($a_iotumAll as $a_iotumEntry) {
+			$i_iotumTypeId = $a_iotumEntry['iotumType'];
+			if (array_key_exists($i_iotumTypeId, $a_iotumTypes)) {
+				$a_iotumType = $a_iotumTypes[$i_iotumTypeId];
+				unset($a_iotumType['id']);
+				$a_iotum[] = array_merge($a_iotumEntry, $a_iotumType);
+			}
+		}
+
+		// get the plans
+		$a_plans = character_funcs::get_related_table_entries($a_character, "plans");
+
+		ob_start();
+		?>
+		<div class="descriptor_group">
+			<span class="auto_center title" collapseid="GroupCraft">Crafting</span>
+
+			<div id="plan_elements" class="plans">
+			<span class="auto_center title" collapseid="GroupPlans" style="font-size:34px">Plans</span>
+			<?php
+			echo character_funcs::draw_plans($a_plans, $a_iotum);
+			?>
+			</div>
+			
+			<div>
+			<span class="auto_center largeText" onclick="addNew('plans', 'Plan', 'plan_elements');" style="color:blue; text-decoration:underline; width:200px; cursor:pointer;">Add New Plan</span>
+			</div>
+
+			<div id="iotum_elements" class="iotum">
+			<span class="auto_center title" collapseid="GroupIotum" style="font-size:34px">Iotum</span>
+			<?php
+			echo character_funcs::draw_iotum($a_iotum);
+			?>
+			</div>
+			
+			<div>
+			<span class="auto_center largeText" onclick="addNew('iotumTypes', 'Iotum Type', 'iotum_elements');" style="color:blue; text-decoration:underline; width:200px; cursor:pointer;">Add New Iotum Type</span>
+			</div>
+
+		</div>
+		<?php
+		$s_page = ob_get_contents();
+		ob_end_clean();
+
+		return $s_page;
+	}
+
 	public static function Character_Relations($a_character) {
 		global $global_user;
 		global $maindb;
@@ -902,6 +1394,33 @@ class character_funcs {
 		return $s_page;
 	}
 
+	public static function update_character(& $a_character, $uid, $cid) {
+		global $maindb;
+
+		// Get the iotumTypes ids and find the ones that the character does not have yet.
+		$a_iotumTypes = db_query("SELECT * FROM `[maindb]`.`iotumTypes` WHERE `campaign`='[cid]'",
+		                         array("maindb"=>$maindb, "cid"=>$a_character['campaign']));
+		$a_iotumTypesIds = getValuesOfInnerArraysByKey($a_iotumTypes, "id");
+		$a_iotumChar = character_funcs::get_related_table_entries($a_character, "iotum");
+		$a_iotumCharIds = getValuesOfInnerArraysByKey($a_iotumChar, "iotumType");
+		$a_newIotumTypes = array_diff($a_iotumTypesIds, $a_iotumCharIds);
+
+		// add new iotum types
+		$a_newIotum = array();
+		foreach ($a_newIotumTypes as $i_iotumTypeId) {
+			$a_insert_vals = array("iotumType"=>$i_iotumTypeId, "quantity"=>0);
+			$s_insert_str = array_to_insert_clause($a_insert_vals);
+			db_query("INSERT INTO `[maindb]`.`iotum` {$s_insert_str}",
+			         array_merge(array("maindb"=>$maindb), $a_insert_vals));
+			$a_newIotum[] = get_latest_insert_id("iotum");
+		}
+		if (count($a_newIotum) > 0) {
+			$s_iotumIds = $a_character["iotum"] . '|'. implode('||', $a_newIotum) . '|';
+			campaign_funcs::update_character($a_character['id'], "iotum", $s_iotumIds);
+			$a_character["iotum"] = $s_iotumIds;
+		}
+	}
+
 	public static function draw_character($a_character) {
 		global $global_user;
 		global $maindb;
@@ -913,6 +1432,9 @@ class character_funcs {
 		$b_has_access = strpos($a_character['users'], "|{$uid}|") !== FALSE;
 		if (!$b_has_access && !campaign_funcs::is_gm($cid))
 			return "You aren't authorized to see this character.";
+
+		// update the character, as necessary
+		character_funcs::update_character($a_character, $uid, $cid);
 
 		// draw each group
 		$s_page = "";
@@ -954,7 +1476,7 @@ class character_funcs {
 				};
 				var autoSizeFunc = function(k, v) {
 					var jelement = $(v);
-					jelement.css({"width": jelement.width() + "px"});
+					jelement.css({"width": jelement.width() + 1 + "px"});
 				};
 				var countWidthFunc = function(k, v) {
 					currWidth += $(v).width();
@@ -1127,9 +1649,11 @@ class character_funcs {
 				}
 				interpret_commands(send_ajax_call("ajax.php", posts), jerrors_label);
 			}
-			window.remove = function(element, rowid, table, description, removeRow) {
+			window.remove = function(element, rowid, table, description, removeRow, specialMessage) {
 				if (arguments.length < 5 || removeRow === undefined) removeRow = false;
-				if (confirm("Are you sure you want to remove this " + description + "?"))
+				if (arguments.length < 6 || specialMessage === undefined)
+					specialMessage = "Are you sure you want to remove this " + description + "?";
+				if (confirm(specialMessage))
 				{
 					var jerrors_label = $("#floater").find(".floater_errors");
 					var posts = {
@@ -1175,6 +1699,12 @@ class character_funcs {
 	public static function create_character($cid, $uid) {
 		global $maindb;
 
+		// get some values
+		$s_iotumTypeIds = getIdsFromTable($maindb, "iotumTypes", array(
+			"campaign"=>$cid
+		));
+		$s_iotumTypeIds = ($s_iotumTypeIds === FALSE) ? "" : $s_iotumTypeIds;
+
 		// create the character
 		$a_insert_vals = array(
 			"name"=>"no name",
@@ -1189,7 +1719,7 @@ class character_funcs {
 			"benefitExtraEffort"=>0, //bit
 			"benefitSkillTraining"=>0, //bit
 			"benefitOther"=>0, //bit
-			"recoveryBonus"=>"2", //varchar
+			"recoveryBonus"=>"0", //varchar
 			"recoveryAction"=>0, //bit
 			"recovery10min"=>0, //bit
 			"recovery1hr"=>0, //bit
@@ -1212,6 +1742,7 @@ class character_funcs {
 			"attacks"=>"", //varchar
 			"armor"=>"", //varchar
 			"abilities"=>"", //varchar
+			"playerIntrusions"=>"", //varchar
 			"inabilities"=>"", //varchar
 			"cyphers"=>"", //varchar
 			"cypherLimit"=>"", //varchar
@@ -1233,9 +1764,11 @@ class character_funcs {
 			"accomplishments"=>"", //varchar
 			"campaign"=>$cid, //int
 			"users"=>"|{$uid}|", //int
-			"drawOrder"=>"Core,Cyphers,Artifacts,Skills,Abilities,Inabilities,Equipment,Combat,Oddities,Character_Relations,Places,Journal,Description", //varchar
-			"collapseIds"=>""
-
+			"drawOrder"=>"Core,Temporary_Notes,Cyphers,Artifacts,Oddities,Skills,Abilities,Inabilities,Player_Intrusions,Equipment,Combat,Crafting,Character_Relations,Places,Journal,Description", //varchar
+			"collapseIds"=>"", //varchar
+			"tempNotes"=>"", // text
+			"iotum"=>$s_iotumTypeIds, // varchar
+			"plans"=>"" // varchar
 		);
 		$s_insert_clause = array_to_insert_clause($a_insert_vals);
 		$b_success = db_query("INSERT INTO `[maindb]`.`characters` {$s_insert_clause}",

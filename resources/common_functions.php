@@ -170,16 +170,19 @@ function manage_output($s_output) {
 }
 
 function error_log_array($a_output, $i_tab_level = 0) {
-	$s_tab = str_repeat("  ", $i_tab_level);
+	$s_tab_prefix = (count($a_output) > 9) ? "    " : "   ";
+	$s_tab = str_repeat($s_tab_prefix, $i_tab_level);
 	foreach ($a_output as $k=>$v) {
 		if (is_object($v)) {
 			$v = (array)$v;
 		}
+		$sk = (is_numeric($k) || is_bool($k)) ? "$k" : "\"{$k}\"";
 		if (is_array($v)) {
-			error_log("{$s_tab}{$k}: array:   ****");
+			error_log("{$s_tab}{$sk}: **** array ****");
 			error_log_array($v, $i_tab_level+1);
 		} else {
-			error_log("{$s_tab}{$k}: {$v}   ****");
+			$sv = (is_numeric($v) || is_bool($v)) ? "$v" : "\"{$v}\"";
+			error_log("{$s_tab}{$sk}: {$sv}");
 		}
 	}
 }
@@ -241,6 +244,20 @@ function escapeTextVals($a_vals, $a_keys) {
 		$a_vals2[$s_key] = htmlspecialchars($a_vals2[$s_key]);
 	}
 	return $a_vals2;
+}
+
+function getValuesOfInnerArraysByKey($a_array, $si_key) {
+	if (count($a_array) == 0)
+		return array();
+
+	$a_retval = array();
+	foreach ($a_array as $a_inner_array) {
+		if (!array_key_exists($si_key, $a_inner_array))
+			continue;
+		$a_retval[] = $a_inner_array[$si_key];
+	}
+
+	return $a_retval;
 }
 
 ?>
