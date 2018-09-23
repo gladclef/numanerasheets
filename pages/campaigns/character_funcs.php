@@ -1839,7 +1839,7 @@ class character_funcs {
 
 		// copy all the associated things of the character
 		if ($old_cid != $new_cid) {
-			$a_tables = array("abilities", "armor", "artifacts", "attacks", "cyphers", "equipment", "inabilities", "oddities", "places", "skills");
+			$a_tables = array("abilities", "armor", "artifacts", "attacks", "cyphers", "equipment", "inabilities", "oddities", "places", "skills", "playerIntrusions");
 			foreach ($a_tables as $s_tablename) {
 				// get the ids and check that there are any
 				$a_ids = explodeIds($a_character[$s_tablename]);
