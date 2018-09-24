@@ -147,7 +147,7 @@
 	padding: 0 10px;
 }
 .descriptor_group .tokenField .token .counter {
-	border-left: 1px solid #aaa;
+	border-left: 1px solid black;
 	margin-left: 6px;
 	padding-left: 4px;
 }

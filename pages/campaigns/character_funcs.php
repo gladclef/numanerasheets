@@ -827,25 +827,39 @@ class character_funcs {
 
 		// builds a list of all iotum of the form:
 		// {
-		//   iotum-id: { "name":name, "cnt":quantity, "id":iotum-id },
+		//   iotumType-id: { "name":name, "cnt":quantity, "tokenId":iotum-id, "groupId":iotumType-id },
+		//   ...
+		// }
+		// and a map from group ids to token ids of the form
+		// {
+		//   iotum-id: { "groupId":iotumType-id },
 		//   ...
 		// }
 		$b_first = TRUE;
 		$s_iotum = "{";
+		$s_map = "{";
 		foreach ($a_iotum as $a_iotumEntry)
 		{
-			if (!$b_first) $s_iotum .= ",";
+			if (!$b_first) {
+				$s_iotum .= ",";
+				$s_map .= ",";
+			}
 			$b_first = FALSE;
 			$a_iotumEntry2 = escapeTextVals($a_iotumEntry, array(
 				'name'
 			));
-			$s_iotum .= $a_iotumEntry2['id'] . ":{" .
+			$s_iotum .= $a_iotumEntry2['iotumType'] . ":{" .
 				"\"name\":\"" . $a_iotumEntry2['name'] . "\"," . 
 				"\"cnt\":" . $a_iotumEntry2['quantity'] . "," . 
-				"\"id\":" . $a_iotumEntry2['id'] .
+				"\"groupId\":" . $a_iotumEntry2['iotumType'] . "," .
+				"\"tokenId\":" . $a_iotumEntry2['id'] .
+			"}";
+			$s_map .= $a_iotumEntry2['id'] . ":{" .
+				"\"groupId\":" . $a_iotumEntry2['iotumType'] .
 			"}";
 		}
 		$s_iotum .= "}";
+		$s_map .= "}";
 
 		foreach ($a_plans as $a_plan) {
 		$a_plan2 = escapeTextVals($a_plan, array(
@@ -861,11 +875,12 @@ class character_funcs {
 
 		?>
 		<div style="border-left:1px solid black; padding-left:5px; position:relative;">
-			<span class="collapsibleHeader" collapseid="plan<?php echo $a_plan2['id']; ?>">
-				<span class="auto_size">Name: </span>
-				<input class="col2" type="text" name="name" value="<?php echo $a_plan2['name']; ?>" placeholder="name" table="plans" rowid="<?php echo $a_plan2['id']; ?>">
-				<span class="endButton closeButton" onclick="remove(this, <?php echo $a_plan2['id']; ?>, 'plans', 'Plan');">X</span>
-			</span>
+			<span class="collapsibleHeader" collapseid="plan<?php echo $a_plan2['id']; ?>"><span
+				class="auto_size">Name: </span><input
+				class="col2" type="text" name="name" value="<?php echo $a_plan2['name']; ?>" placeholder="name" table="plans" rowid="<?php echo $a_plan2['id']; ?>"><span
+				class="endButton closeButton" onclick="remove(this, <?php echo $a_plan2['id']; ?>, 'plans', 'Plan');">X</span><span
+				class="endButton shareButton" onclick="share(this, <?php echo $a_plan2['id']; ?>, 'plans', 'Plan', '<?php echo $a_plan2['name']; ?>');">
+			</span></span>
 			<div class="collapsibleBody mediumText">
 
 				<div>
@@ -876,12 +891,12 @@ class character_funcs {
 				<div class="col1inner"><span
 					class="auto_size">Iotum: </span><input
 					type="hidden" name="iotum" value="<?php echo $a_plan2['iotum']; ?>" placeholder="iotum" table="plans" rowid="<?php echo $a_plan2['id']; ?>"/><span
-					class="fill tokenField tokenCount" relTable="plans" relColumn="iotum" entries="iotumObj" rowid="<?php echo $a_plan2['id']; ?>" value="<?php echo $a_plan2['iotum']; ?>"
+					class="fill tokenField tokenCount" relTable="plans" relColumn="iotum" entries="iotumTypes" groupMap="iotumMap" rowid="<?php echo $a_plan2['id']; ?>" value="<?php echo $a_plan2['iotum']; ?>"
 				></span></div>
 
 				<div>
-					<span class="auto_size">Parts: </span><textarea class="col5 smallTextarea" style="height:20px" name="parts" value="<?php echo $a_plan2['parts']; ?>" placeholder="parts" table="plans" rowid="<?php echo $a_plan2['id']; ?>"></textarea>
-					<span class="auto_size">Depletion: </span><textarea class="col5 smallTextarea" style="height:20px" name="depletion" value="<?php echo $a_plan2['depletion']; ?>" placeholder="depletion" table="plans" rowid="<?php echo $a_plan2['id']; ?>"></textarea>
+					<span class="auto_size">Parts: </span><textarea class="col5 smallTextarea" style="height:20px" name="parts" placeholder="parts" table="plans" rowid="<?php echo $a_plan2['id']; ?>"><?php echo $a_plan2['parts']; ?></textarea>
+					<span class="auto_size">Depletion: </span><textarea class="col5 smallTextarea" style="height:20px" name="depletion" placeholder="depletion" table="plans" rowid="<?php echo $a_plan2['id']; ?>"><?php echo $a_plan2['depletion']; ?></textarea>
 				</div>
 
 				<div><span>Specifications:</span></div>
@@ -900,7 +915,8 @@ class character_funcs {
 
 		?>
 		<script type="text/javascript">
-			window.iotumObj = <?php echo $s_iotum; ?>;
+			window.iotumTypes = <?php echo $s_iotum; ?>;
+			window.iotumMap = <?php echo $s_map; ?>;
 			var drawAllTokenFields = function() {
 				var tokenFields = $(".tokenField");
 				var getTokensForField = function(jtokenField) {
@@ -913,7 +929,7 @@ class character_funcs {
 					}
 					for (var i = 0; i < value.length; i++) {
 						retval.push({
-							tokenId: value[i][0],
+							groupId: value[i][0],
 							requires: value[i][1]
 						});
 					}
@@ -927,11 +943,11 @@ class character_funcs {
 					var condensedVal = [];
 					for (var i = 0; i < value.length; i++) {
 						var val = value[i];
-						if (addTokenId !== null && val.tokenId == addTokenId) {
+						if (addTokenId !== null && val.groupId == addTokenId) {
 							addTokenId = null;
 						}
-						if (removeTokenId === null || val.tokenId != removeTokenId) {
-							condensedVal.push([ val.tokenId, val.requires ]);
+						if (removeTokenId === null || val.groupId != removeTokenId) {
+							condensedVal.push([ val.groupId, val.requires ]);
 						}
 					}
 					if (addTokenId !== null) {
@@ -953,12 +969,14 @@ class character_funcs {
 					sendUpdate("iotum", newValue, "plans", planId, jerrors_label);
 					jtokenField.attr('value', newValue);
 				};
-				var drawIotumEditor = function(jtoken, a_token, entries) {
+				var drawIotumEditor = function(jtoken, a_token, entries, groupMap) {
 					var jeditor = $("#iotumEditor");
 					var jtokenField = jtoken.parent();
 					var top = jtoken.position().top * 2 + jtoken.outerHeight();
 					var left = jtoken.position().left;
 					var a_jtoken = [jtoken];
+					var jtokenNext = findNextSibling(jtoken);
+					var jtokenPrev = findPrevSibling(jtoken);
 					jeditor.remove();
 
 					var jeditor = $("<div id='iotumEditor' class='underEditor'></div>");
@@ -976,23 +994,37 @@ class character_funcs {
 					jrequiresCnt.keypress(cancel_enter_keypress);
 					var requiresCntUpdate = function(e) {
 						a_token.requires = jrequiresCnt.val();
-						updateTokenFieldValue(jtokenField, null, null, a_token.tokenId, jrequiresCnt.val());
+						updateTokenFieldValue(jtokenField, null, null, a_token.groupId, jrequiresCnt.val());
 						var jnewToken = drawToken(jtokenField, a_token, entries);
 						jnewToken.insertAfter(a_jtoken[0]);
 						a_jtoken[0].remove();
 						a_jtoken[0] = jnewToken;
+						selectToken(jnewToken, a_token, entries, groupMap);
 					};
-					jrequiresCnt.keyup(function(e) { cancel_enter_keypress(e); requiresCntUpdate(e) });
+					jrequiresCnt.keydown(function(e) {
+						if (e.which == 9/*tab*/) {
+							e.preventDefault();
+							jeditor.remove();
+							if (!e.shiftKey && jtokenNext != null) jtokenNext.click();
+							if (e.shiftKey  && jtokenPrev != null) jtokenPrev.click();
+						}
+					});
+					jrequiresCnt.keyup(function(e) {
+						cancel_enter_keypress(e);
+						requiresCntUpdate(e);
+						if (e.which == 13/*enter*/ || e.which == 27/*esc*/)
+							jeditor.remove();
+					});
 					jrequiresCnt.mouseup(requiresCntUpdate);
 					jdelete.mouseenter(function() { jdelete.css("background-color", "rgba(0,0,0,0.3)") });
 					jdelete.mouseleave(function() { jdelete.css("background-color", "rgba(0,0,0,0.1)") });
 					jdelete.click(function() {
-						updateTokenFieldValue(jtokenField, null, a_token.tokenId);
+						updateTokenFieldValue(jtokenField, null, a_token.groupId);
 						drawTokenField(jtokenField);
 						jeditor.remove();
 					});
 				};
-				var drawIotumAdder = function(jtokenField, jtokenAddNew, entries) {
+				var drawIotumAdder = function(jtokenField, jtokenAddNew, fittingEntries, groupMap) {
 					var jeditor = $("#iotumEditor");
 					var top = jtokenAddNew.position().top * 2 + jtokenAddNew.outerHeight();
 					var left = jtokenAddNew.position().left;
@@ -1003,7 +1035,7 @@ class character_funcs {
 					jeditor.css({ "top" : (top+"px"), "left" : (left+"px") });
 
 					var first = true;
-					$.each(entries, function(k, entry) {
+					$.each(fittingEntries, function(k, entry) {
 						var jentry = $("<span style='padding:0 4px; border:1px solid #aaa; border-radius:5px; background-color:#eee; margin:2px; cursor:pointer;'></span>");
 						if (first) {
 							jentry.addClass("adderDefault");
@@ -1011,7 +1043,7 @@ class character_funcs {
 						}
 						jentry.text(entry.name);
 						jentry.click(function() {
-							updateTokenFieldValue(jtokenField, entry.id, null);
+							updateTokenFieldValue(jtokenField, entry.groupId, null);
 							drawTokenField(jtokenField);
 							jeditor.remove();
 							jtokenField.find(".addNewTextarea").focus();
@@ -1022,7 +1054,7 @@ class character_funcs {
 						first = false;
 					});
 				};
-				var selectToken = function(jtoken, a_token, entries) {
+				var selectToken = function(jtoken, a_token, entries, groupMap) {
 					var isSelected = jtoken.hasClass("selected");
 					$(".token.selected").removeClass("selected");
 					if (isSelected) {
@@ -1033,10 +1065,10 @@ class character_funcs {
 						drawIotumEditor(jtoken, a_token, entries);
 					}
 				};
-				var drawToken = function(jtokenField, a_token, entries) {
-					var tokenEntry = entries[a_token.tokenId];
+				var drawToken = function(jtokenField, a_token, entries, groupMap) {
+					var tokenEntry = entries[a_token.groupId];
 					var cnt = parse_int(tokenEntry.cnt);
-					var total = parse_int(a_token.requires);
+					var total = Math.max(parse_int(a_token.requires), 1);
 					var c = Math.max(Math.min(cnt / total, 1.0), 0.0);
 					var rgb = colorFade(c, [255,0,0], [255,255,0], [0,255,0]);
 					
@@ -1054,6 +1086,7 @@ class character_funcs {
 				var drawInsertTextarea = function(jtokenField) {
 					// get the available tokens to add
 					var entries = window[jtokenField.attr('entries')];
+					var groupMap = window[jtokenField.attr('groupMap')];
 					var value = getTokensForField(jtokenField);
 					var unusedTokens = $.extend({}, entries);
 					for (var i = 0; i < value.length; i++) {
@@ -1088,8 +1121,9 @@ class character_funcs {
 					kill_children(jtokenField);
 					var value = getTokensForField(jtokenField);
 					var entries = window[jtokenField.attr('entries')];
+					var groupMap = window[jtokenField.attr('groupMap')];
 					$.each(value, function(k, a_token) {
-						var jtoken = drawToken(jtokenField, a_token, entries);
+						var jtoken = drawToken(jtokenField, a_token, entries, groupMap);
 						jtokenField.append(jtoken);
 					});
 					jtokenField.append(drawInsertTextarea(jtokenField));
@@ -1143,8 +1177,9 @@ class character_funcs {
 				$.each(jiotumQuantityFields, function(k, iotumQuantityField) {
 					var jfield = $(iotumQuantityField);
 					jfield.keyup(function() {
-						var id = parse_int(jfield.attr("rowid"));
-						window.iotumObj[id].cnt = jfield.val();
+						var iotumId = parse_int(jfield.attr("rowid"));
+						var iotumTypeId = window.iotumMap[iotumId].groupId;
+						window.iotumTypes[iotumTypeId].cnt = jfield.val();
 						if (window.iotumObjUpdateTimeout !== undefined) {
 							clearTimeout(window.iotumObjUpdateTimeout);
 						}
@@ -1202,10 +1237,9 @@ class character_funcs {
 			<?php
 			echo character_funcs::draw_plans($a_plans, $a_iotum);
 			?>
-			</div>
-			
 			<div>
 			<span class="auto_center largeText" onclick="addNew('plans', 'Plan', 'plan_elements');" style="color:blue; text-decoration:underline; width:200px; cursor:pointer;">Add New Plan</span>
+			</div>
 			</div>
 
 			<div id="iotum_elements" class="iotum">
@@ -1213,10 +1247,9 @@ class character_funcs {
 			<?php
 			echo character_funcs::draw_iotum($a_iotum);
 			?>
-			</div>
-			
 			<div>
 			<span class="auto_center largeText" onclick="addNew('iotumTypes', 'Iotum Type', 'iotum_elements');" style="color:blue; text-decoration:underline; width:200px; cursor:pointer;">Add New Iotum Type</span>
+			</div>
 			</div>
 
 		</div>

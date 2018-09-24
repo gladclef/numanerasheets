@@ -582,7 +582,7 @@ class user_ajax {
 		$a_characters = campaign_funcs::get_characters($cid, $b_is_gm, $charid, $uid);
 		$s_charName = (is_array($a_characters) && count($a_characters) > 0) ? $a_characters[0]['name'] : "unknown";
 		$a_rows = db_query("SELECT `id` FROM `[maindb]`.`characters` WHERE `id`='[charid]' AND INSTR(`[table]`,'|[rowid]|')",
-		                   array("maindb"=>$maindb, "charid"=>$charid, "table"=>$s_table, "rowid"=>$rowid));
+		                   array("maindb"=>$maindb, "charid"=>$charid, "table"=>$s_table, "rowid"=>$rowid), TRUE);
 		if (!is_array($a_rows) || count($a_rows) == 0) {
 			return json_encode(array(
 				new command("print failure", "The character \"{$s_charName}\" must have that \"{$s_description}\" in order to share it!")));

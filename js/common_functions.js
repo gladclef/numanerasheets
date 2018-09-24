@@ -316,3 +316,47 @@ function colorFade(ratio, emptyColor, midColor, fullColor) {
 	}
 	return retval;
 };
+
+function findNextSibling(jelement) {
+	var jparent = jelement.parent();
+	if (jparent === null || jparent === undefined || jparent.length == 0)
+		return null;
+	
+	var children = jparent.children();
+	var foundSame = false;
+	var foundNext = false;
+	var next = null;
+	$.each(children, function(k, v) {
+		var jchild = $(v);
+		if (foundSame && !foundNext) {
+			next = $(v);
+			foundNext = true;
+		}
+		if (jchild.is(jelement)) {
+			foundSame = true;
+		}
+	});
+
+	return next;
+};
+
+function findPrevSibling(jelement) {
+	var jparent = jelement.parent();
+	if (jparent === null || jparent === undefined || jparent.length == 0)
+		return null;
+	
+	var children = jparent.children();
+	var foundSame = false;
+	var prev = null;
+	$.each(children, function(k, v) {
+		var jchild = $(v);
+		if (jchild.is(jelement)) {
+			foundSame = true;
+		}
+		if (!foundSame) {
+			prev = $(v);
+		}
+	});
+
+	return prev;
+}
